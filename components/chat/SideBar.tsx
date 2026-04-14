@@ -4,8 +4,9 @@ import { DEPARTMENT } from "@/types/department"
 import { useState } from "react";
 import { ChevronRight, Settings, MessageCircle } from "lucide-react"
 import { UserStatus } from "@/types/chat";
+import { useRouter } from "next/navigation"
 
-function getStatusColor(status: UserStatus) {
+export function getStatusColor(status: UserStatus) {
     switch (status) {
         case "online": return "bg-green-400"
         case "offline": return "bg-gray-400"
@@ -16,9 +17,10 @@ function getStatusColor(status: UserStatus) {
 export default function SideBar() {
 
     const [openDepts, setOpenDepts] = useState<string[]>([]);
+    const router = useRouter();
 
     return (
-        <div className="flex w-1/4 min-h-screen bg-purple-700 rounded-lg">
+        <div className="flex w-1/4 min-h-screen bg-purple-700 rounded-l-lg">
             {/* 왼쪽 프로필칸 */}
             <div className="p-4 flex">
                 {/* 메인홈 버튼 */}
@@ -35,7 +37,7 @@ export default function SideBar() {
             {/* 오른쪽 채팅목록 */}
             <div className="w-full">
                 {/* 내 프로필 */}
-                <div className="flex p-4 justify-between">
+                <div className="flex p-4 justify-between items-center">
                     {/* 사진 */}
                     <div className="flex">
                         <div className="rounded-full bg-gray-400 w-[50px] h-[50px]">
@@ -52,9 +54,10 @@ export default function SideBar() {
                         </div>
                     </div>
 
-                    <div>설정</div>
+                    <Settings size={18} className="hover:text-gray-200 cursor-pointer" />
                 </div>
 
+                {/* 경계선 */}
                 <div className="border-b border-gray-400 w-[100%]"></div>
 
                 {/* 부서 목록 */}
@@ -99,8 +102,12 @@ export default function SideBar() {
                                         <div className="
                                             invisible group-hover:visible flex gap-1 ml-auto
                                         ">
-                                            <MessageCircle size={16} className="hover:text-gray-200" />
-                                            <Settings size={16} className="hover:text-gray-200" />
+                                            <MessageCircle
+                                                size={16}
+                                                className="hover:text-gray-200 cursor-pointer"
+                                                onClick={() => router.push(`/chat/${user.id}`)}
+                                            />
+                                            <Settings size={16} className="hover:text-gray-200 cursor-pointer" />
                                         </div>
                                     </div>
                                 ))}

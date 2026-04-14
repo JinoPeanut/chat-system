@@ -10,15 +10,15 @@ export type User = {
 }
 
 export type Message = {
-    readonly id: string | null, // 메세지 아이디
-    readonly send: string | null, // 보낸 사람
-    readonly content: string | null, // 내용
-    readonly time: Date | null, // 시간
+    readonly id: string, // 메세지 아이디
+    readonly send: string, // 보낸 사람
+    readonly content: string, // 내용
+    readonly timeAt: Date, // 시간
 }
 
 export type Chat = {
-    readonly id: string | null, // 방 아이디
-    readonly room: RoomType | null, // 방 타입
+    readonly id: string, // 방 아이디
+    readonly room: RoomType, // 방 타입
     readonly members: User[] | null, // 방 참여자
     readonly messages: Message[] | null, // 메세지들
 }
@@ -39,7 +39,7 @@ export const USERS: Record<string, User> = {
     },
 
     user3: {
-        id: "user-2",
+        id: "user-3",
         name: "이유리",
         department: "manage-1",
         status: "AFK",
@@ -47,17 +47,23 @@ export const USERS: Record<string, User> = {
 }
 
 export const MESSAGE: Record<string, Message> = {
-    info: {
-        id: null,
-        send: null,
-        content: "없음",
-        time: null,
+    info1: {
+        id: "message-1",
+        send: "user-3",
+        content: "안녕하세요 이유리 입니다.",
+        timeAt: new Date(),
+    },
+    info2: {
+        id: "message-2",
+        send: "user-1",
+        content: "안녕하세요 홍길동 입니다.",
+        timeAt: new Date()
     }
 }
 
 export const CHATROOM: Record<string, Chat> = {
     room1: {
-        id: null,
+        id: "group-1",
         room: "group",
         members: null,
         messages: null,
