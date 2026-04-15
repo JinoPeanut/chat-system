@@ -24,9 +24,11 @@ export default function SideBar() {
             {/* 왼쪽 프로필칸 */}
             <div className="p-4 flex">
                 {/* 메인홈 버튼 */}
-                <button className="
-                    rounded-lg border-gray-300 bg-gray-500 w-[50px] h-[50px]
-                    justify-center items-center hover:bg-gray-400 mr-2
+                <button
+                    onClick={() => router.push("/")}
+                    className="
+                        rounded-lg border-gray-300 bg-gray-500 w-[50px] h-[50px]
+                        justify-center items-center hover:bg-gray-400 mr-2
                 ">
                     Home
                 </button>
