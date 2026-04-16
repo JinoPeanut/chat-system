@@ -1,5 +1,4 @@
 
-
 export type AttendanceType = {
     id: string,
     userId: string,

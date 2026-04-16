@@ -1,4 +1,5 @@
 import AttendancePanel from "@/components/home/AttendancePanel";
+import LeavePanel from "@/components/home/LeavePanel";
 
 export default function HomePage() {
   return (
@@ -19,6 +20,7 @@ export default function HomePage() {
         {/* 왼쪽 - 근태 관리*/}
         <div className="col-span-3">
           <AttendancePanel />
+          <LeavePanel />
         </div>
 
         {/* 중간 - 최근채팅, 공지사항 */}

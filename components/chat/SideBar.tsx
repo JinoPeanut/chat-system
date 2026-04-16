@@ -20,7 +20,7 @@ export default function SideBar() {
     const router = useRouter();
 
     return (
-        <div className="flex w-1/4 min-h-screen bg-purple-700 rounded-l-lg">
+        <div className="flex w-1/4 min-h-screen bg-purple-500 rounded-l-lg">
             {/* 왼쪽 프로필칸 */}
             <div className="p-4 flex">
                 {/* 메인홈 버튼 */}
