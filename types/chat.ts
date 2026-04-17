@@ -67,5 +67,19 @@ export const CHATROOM: Record<string, Chat> = {
         room: "group",
         members: null,
         messages: null,
+    },
+
+    room2: {
+        id: "personal-1",
+        room: "personal",
+        members: [USERS.user1, USERS.user2],
+        messages: [MESSAGE.info1, MESSAGE.info2],
+    },
+
+    room3: {
+        id: "personal-2",
+        room: "personal",
+        members: [USERS.user1, USERS.user3],
+        messages: [MESSAGE.info1, MESSAGE.info2],
     }
 }
