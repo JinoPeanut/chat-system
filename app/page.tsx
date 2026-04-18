@@ -1,5 +1,6 @@
 import AttendancePanel from "@/components/home/AttendancePanel";
 import LeavePanel from "@/components/home/LeavePanel";
+import NoticePanel from "@/components/home/NoticePanel";
 import RecentChatsPanel from "@/components/home/RecentChatsPanel";
 
 export default function HomePage() {
@@ -27,6 +28,7 @@ export default function HomePage() {
         {/* 중간 - 최근채팅, 공지사항 */}
         <div className="col-span-6">
           <RecentChatsPanel />
+          <NoticePanel />
         </div>
         {/* 오른쪽 - 오늘일정, 프로필카드 */}
         <div className="col-span-3">

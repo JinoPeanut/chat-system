@@ -1,4 +1,4 @@
-export type LeaveType = "annual" | "half-am" | "half-pm";
+export type LeaveType = "annual" | "half_am" | "half_pm";
 export type LeaveStatus = "pending" | "approved" | "rejected";
 
 export type Leave = {
@@ -47,7 +47,7 @@ export const LEAVE_HISTORY: LeaveHistory[] = [
         leaveDate: "2026-03-21",
         usedDays: 0.5,
         usedHours: 4,
-        leaveType: "half-pm",
+        leaveType: "half_pm",
         status: "approved",
         createdAt: "2026-03-10T02:20:00.000Z",
     },

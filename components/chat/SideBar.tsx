@@ -2,7 +2,7 @@
 
 import { DEPARTMENT } from "@/types/department"
 import { useState } from "react";
-import { ChevronRight, Settings, MessageCircle } from "lucide-react"
+import { ChevronRight, Settings, MessageCircle, Home } from "lucide-react"
 import { UserStatus } from "@/types/chat";
 import { useRouter } from "next/navigation"
 
@@ -27,10 +27,10 @@ export default function SideBar() {
                 <button
                     onClick={() => router.push("/")}
                     className="
-                        rounded-lg border-gray-300 bg-gray-500 w-[50px] h-[50px]
-                        justify-center items-center hover:bg-gray-400 mr-2
+                        rounded-lg border-gray-300 w-[50px] h-[50px]
+                        inline-flex justify-center items-center hover:bg-gray-400 mr-2
                 ">
-                    Home
+                    <Home />
                 </button>
             </div>
 

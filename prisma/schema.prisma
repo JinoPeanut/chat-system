@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  online
+  offline
+  AFK
+}
+
+enum RoomType {
+  personal
+  group
+}
+
+enum NoticeCategory {
+  notice
+  event
+  update
+  etc
+}
+
+enum LeaveType {
+  annual
+  half_am
+  half_pm
+}
+
+enum LeaveStatus {
+  pending
+  approved
+  rejected
+}
+
+model User {
+  id          String      @id
+  name        String
+  department  String
+  position    String
+  status      UserStatus @default(offline)
+  profilePic  String?
+
+  messages Message[] @relation("MessageSender")
+  chatRooms ChatRoom[] @relation("ChatMembers")
+  notices   Notice[]
+}
+
+model Message {
+  id          String      @id
+  senderId    String
+  chatRoomId  String
+  content     String      
+  timeAt      DateTime    @default(now())
+  
+  sender      User        @relation("MessageSender", fields: [senderId], references: [id])
+  chatRoom    ChatRoom    @relation(fields: [chatRoomId], references: [id])
+}
+
+model ChatRoom {
+  id          String       @id
+  room        RoomType
+  members     User[]       @relation("ChatMembers")
+  messages    Message[]
+}
+
+model Notice {
+  id          String         @id
+  category    NoticeCategory
+  title       String
+  content     String?
+  createdAt   DateTime       @default(now())
+  isPinned    Boolean        @default(false)
+  authorId    String
+  author      User           @relation(fields: [authorId], references: [id])
+  @@index([createdAt])
+}

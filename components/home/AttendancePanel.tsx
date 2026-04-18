@@ -27,7 +27,7 @@ function formatMinutes(minutes: number) {
 }
 
 export default function AttendancePanel() {
-    const [now, setNow] = useState(new Date());
+    const [now, setNow] = useState<Date | null>(null);
     const [attendance, setAttendance] = useState(ATTENDANCE);
 
     const todayKey = new Date().toISOString().slice(0, 10);
@@ -121,7 +121,7 @@ export default function AttendancePanel() {
                     근태 관리
                 </h2>
                 <p className="pt-1 text-xs text-gray-400">
-                    {formatKoreanTime(now)}
+                    {now ? formatKoreanTime(now) : ""}
                 </p>
             </div>
 

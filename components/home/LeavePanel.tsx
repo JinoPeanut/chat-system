@@ -57,7 +57,7 @@ export default function LeavePanel() {
     function handleChangeLeaveType(e: React.ChangeEvent<HTMLSelectElement>) {
         setApplyForm((prev) => ({
             ...prev,
-            leaveType: e.target.value as "annual" | "half-am" | "half-pm"
+            leaveType: e.target.value as "annual" | "half_am" | "half_pm"
         }));
     }
 
