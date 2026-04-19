@@ -5,7 +5,7 @@ type MessageItemProps = {
     message: Message
     isMine: boolean
     user?: User
-    myUser: User
+    myUser: User,
 }
 
 export default function MessageItem({ message, isMine, user, myUser }: MessageItemProps) {
@@ -17,7 +17,7 @@ export default function MessageItem({ message, isMine, user, myUser }: MessageIt
                     <div className="flex gap-2 items-end">
                         <p>{isMine ? myUser.name : user?.name}</p>
                         <p className="text-sm text-gray-700/50">
-                            {message.timeAt?.toLocaleTimeString("ko-KR", {
+                            {new Date(message.timeAt).toLocaleTimeString("ko-KR", {
                                 year: "numeric",
                                 month: "long",
                                 day: "numeric",

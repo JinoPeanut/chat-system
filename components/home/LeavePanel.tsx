@@ -1,6 +1,5 @@
 "use client"
 
-import { USERS } from "@/types/chat";
 import { LEAVE, LEAVE_HISTORY, LeaveHistory, LeaveType } from "@/types/leave";
 import { ListChecks, PackageOpen, TentTree } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -26,7 +25,8 @@ const getLeaveColor = (percent: number) => {
 
 export default function LeavePanel() {
 
-    const myUserId = USERS.user1.id;
+    const myUserId = "user-1";
+    const myUserName = "홍길동";
     const myLeave = Object.values(LEAVE).find((u) => u.userId === myUserId);
 
     const [isOpen, setIsOpen] = useState(false);
@@ -255,7 +255,7 @@ export default function LeavePanel() {
                                         key={item.id}
                                         className="grid grid-cols-7 gap-2 border-b py-2 text-sm text-center"
                                     >
-                                        <p>{USERS.user1.name}</p>
+                                        <p>{myUserName}</p>
                                         <p>{item.leaveDate}</p>
                                         <p>{item.leaveType}</p>
                                         <p>{item.usedDays}일 {item.usedHours}시간</p>

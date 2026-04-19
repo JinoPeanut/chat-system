@@ -1,9 +1,26 @@
-import { CHATROOM, USERS } from "@/types/chat"
+"use client"
+
+import { Chat } from "@/types/chat"
+import { HomeResponse } from "@/types/notice";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function RecentChatsPanel() {
-    const myUserId = USERS.user1.id;
-    const recentChats = Object.values(CHATROOM)
+    const [chatRooms, setChatRooms] = useState<Chat[]>([]);
+    const myUserId = "user-1";
+
+    useEffect(() => {
+        const fetchHomeData = async () => {
+            const res = await fetch("/api/home");
+            const data: HomeResponse = await res.json();
+
+            setChatRooms(data.chatRooms);
+        }
+
+        fetchHomeData();
+    }, [])
+
+    const recentChats = chatRooms
         // 내가 있는 대화방만 필터링
         .filter((room) => room.members?.some((m) => m.id === myUserId))
         .map((room) => {
@@ -40,7 +57,7 @@ export default function RecentChatsPanel() {
                     : (recentChats.map((chat) => (
                         <Link
                             key={chat.roomId}
-                            href={`\/chat/${chat.partnerId}`}
+                            href={`\/chat/${chat.roomId}`}
                             className="block rounded-md border border-gray-200 p-3 hover:bg-gray-50"
                         >
                             <div className="flex items-center justify-between">

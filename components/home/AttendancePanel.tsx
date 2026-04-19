@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ArrowDown } from "lucide-react";
-import { ATTENDANCE } from "@/types/attendance";
-import { USERS } from "@/types/chat";
+import { AttendanceType } from "@/types/attendance";
 
 function formatKoreanTime(now: Date) {
     const parts = new Intl.DateTimeFormat("ko-KR", {
@@ -26,83 +25,91 @@ function formatMinutes(minutes: number) {
     return `${h}시간 ${m}분`
 }
 
+function formatTimeFromMinutes(minutes: number | null) {
+    if (minutes === null) return "-";
+
+    const h = String(Math.floor(minutes / 60)).padStart(2, "0");
+    const m = String(minutes % 60).padStart(2, "0");
+
+    return `${h}:${m}`;
+}
+
+
 export default function AttendancePanel() {
     const [now, setNow] = useState<Date | null>(null);
-    const [attendance, setAttendance] = useState(ATTENDANCE);
+    const [attendance, setAttendance] = useState<AttendanceType[]>([]);
 
     const todayKey = new Date().toISOString().slice(0, 10);
-    const myUserId = USERS.user1.id;
+    const myUserId = "user-1";
+
+    const fetchAttendance = async () => {
+        const res = await fetch("/api/attendance");
+        const data: AttendanceType[] = await res.json();
+        setAttendance(data);
+    };
 
     // 내 기록인지, 오늘날짜가 맞는지 확인
-    const todayRecord = attendance.find(
+    const todayAttendance = attendance.find(
         (r) => r.userId === myUserId && r.date === todayKey
     );
-    const checkInText = todayRecord?.checkInAt
-        ? new Date(todayRecord.checkInAt).toLocaleTimeString("ko-KR", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-        })
-        : "-";
-    const checkOutText = todayRecord?.checkOutAt
-        ? new Date(todayRecord.checkOutAt).toLocaleTimeString("ko-KR", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-        })
-        : "-";
+    const checkInText = formatTimeFromMinutes(todayAttendance?.checkInAt ?? null);
+    const checkOutText = formatTimeFromMinutes(todayAttendance?.checkOutAt ?? null);
 
     const workTime = 2400;
-    const workMinutesText = todayRecord?.workMinutes ?? 0;
+    const workMinutesText = todayAttendance?.workMinutes ?? 0;
     const leftMinutes = workTime - workMinutesText;
 
     const workPercent = Math.min(100, (workMinutesText / workTime) * 100);
 
-    function handleCheckIn() {
-        if (todayRecord?.checkInAt) return;
+    const handleCheckIn = async () => {
+        if (todayAttendance?.checkInAt) return;
 
-        setAttendance((prev) => {
-            const record = prev.find((r) => r.userId === myUserId && r.date === todayKey);
+        const now = new Date();
+        const checkInAt = now.getHours() * 60 + now.getMinutes();
 
-            if (!record) {
-                return [
-                    ...prev,
-                    {
-                        id: crypto.randomUUID(),
-                        userId: myUserId,
-                        date: todayKey,
-                        checkInAt: Date.now(),
-                        checkOutAt: null,
-                        workMinutes: null,
-                    }
-                ]
-            }
+        const res = await fetch("/api/attendance", {
+            method: "POST",
+            headers: { "Content-type": "application/json" },
+            body: JSON.stringify({
+                userId: myUserId,
+                date: todayKey,
+                checkInAt,
+                checkOutAt: null,
+                workMinutes: null
+            })
+        });
 
-            return prev.map((r) => r.userId === myUserId && r.date === todayKey
-                ? { ...r, checkInAt: Date.now() }
-                : r
-            )
-        })
+        if (!res.ok) return;
+
+        await fetchAttendance();
     }
 
-    function handleCheckOut() {
-        if (!todayRecord?.checkInAt || todayRecord.checkOutAt) return;
+    const handleCheckOut = async () => {
+        if (!todayAttendance?.checkInAt) return;
 
-        const checkOutAt = Date.now();
+        const now = new Date();
+        const checkOutAt = now.getHours() * 60 + now.getMinutes();
+        const workMinutes = checkOutAt - todayAttendance.checkInAt;
 
-        setAttendance((prev) =>
-            prev.map((r) => {
-                if (r.userId !== myUserId || r.date !== todayKey) return r;
+        const res = await fetch("/api/attendance", {
+            method: "PATCH",
+            headers: { "Content-type": "application/json" },
+            body: JSON.stringify({
+                userId: myUserId,
+                date: todayKey,
+                checkOutAt,
+                workMinutes,
+            })
+        });
 
-                const workMinutes = Math.floor((checkOutAt - (r.checkInAt ?? checkOutAt)) / 60000);
+        if (!res.ok) return;
 
-                return {
-                    ...r,
-                    checkOutAt,
-                    workMinutes,
-                }
-            }))
+        await fetchAttendance();
     }
+
+    useEffect(() => {
+        fetchAttendance();
+    }, [])
 
     // 1분마다 시간 업데이트
     useEffect(() => {
@@ -171,7 +178,7 @@ export default function AttendancePanel() {
                     cursor-pointer disabled:text-gray-400 disabled:bg-gray-300
                     disabled:border-gray-300"
                     onClick={handleCheckIn}
-                    disabled={!!todayRecord?.checkInAt}
+                    disabled={!!todayAttendance?.checkInAt}
                 >
                     출근하기
                 </button>
@@ -181,7 +188,7 @@ export default function AttendancePanel() {
                     cursor-pointer disabled:text-gray-400 disabled:bg-gray-300
                     disabled:border-gray-300"
                     onClick={handleCheckOut}
-                    disabled={!todayRecord?.checkInAt || !!todayRecord?.checkOutAt}
+                    disabled={!todayAttendance?.checkInAt || !!todayAttendance?.checkOutAt}
                 >
                     퇴근하기
                 </button>

@@ -1,3 +1,5 @@
+import { Chat, User } from "./chat";
+
 export type NoticeCategory = "notice" | "event" | "update" | "etc";
 export type NoticeScope = "all" | "notice" | "event" | "update" | "etc";
 
@@ -22,6 +24,13 @@ export type Notice = {
     authorId: string;           // USERS와 연결
     createdAt: string;          // 만든 시간
     isPinned?: boolean;         // 상단 고정 필요하면
+    author?: User;
+};
+
+export type HomeResponse = {
+    users: User[];
+    chatRooms: Chat[];
+    notices: Notice[];
 };
 
 export const NOTICE: NoticeState = {

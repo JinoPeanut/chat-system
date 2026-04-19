@@ -42,12 +42,14 @@ model User {
   name        String
   department  String
   position    String
-  status      UserStatus @default(offline)
+  status      UserStatus  @default(offline)
   profilePic  String?
 
-  messages Message[] @relation("MessageSender")
-  chatRooms ChatRoom[] @relation("ChatMembers")
-  notices   Notice[]
+  messages    Message[]   @relation("MessageSender")
+  chatRooms   ChatRoom[]  @relation("ChatMembers")
+  notices     Notice[]
+  leaveBalance LeaveBalance?
+  leaveHistory LeaveHistory[]
 }
 
 model Message {
@@ -78,4 +80,37 @@ model Notice {
   authorId    String
   author      User           @relation(fields: [authorId], references: [id])
   @@index([createdAt])
+}
+
+model Attendance {
+  id          String          @id
+  userId      String
+  date        String
+  checkInAt   Int?
+  checkOutAt  Int?
+  workMinutes Int?
+}
+
+model LeaveBalance {
+  id          String          @id
+  userId      String          @unique
+  totalDays   Float
+  usedDays    Float
+  useHours    Int
+
+  user        User             @relation(fields: [userId], references: [id])
+}
+
+model LeaveHistory {
+  id          String           @id
+  userId      String
+  leaveDate   String
+  usedDays    Float
+  usedHours   Int
+  leaveType   LeaveType
+  status      LeaveStatus
+  reason      String?
+  createdAt   DateTime         @default(now())
+
+  user        User             @relation(fields: [userId], references: [id])
 }

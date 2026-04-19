@@ -1,10 +1,11 @@
 "use client"
 
-import { use, useState } from "react"
-import { MESSAGE, USERS } from "@/types/chat"
+import { use, useEffect, useState } from "react"
+import { Chat } from "@/types/chat"
 import { getStatusColor } from "@/components/chat/SideBar";
 import MessageList from "./_components/MessageList";
 import MessageInput from "./_components/MessageInput";
+import { HomeResponse } from "@/types/notice";
 
 function getUserStatus(status: string) {
     if (status === "online") return "온라인";
@@ -13,12 +14,27 @@ function getUserStatus(status: string) {
 }
 
 export default function ChatPage({ params }: { params: Promise<{ roomId: string }> }) {
-    const [headerMessage, setHeaderMessage] = useState(false);
-
     const { roomId } = use(params);
-    const user = Object.values(USERS).find((u) => u.id === roomId);
-    const myUser = USERS.user1;
-    const messages = Object.values(MESSAGE);
+    const [headerMessage, setHeaderMessage] = useState(false);
+    const [chatRooms, setChatRooms] = useState<Chat[]>([]);
+
+    const fetchHomeData = async () => {
+        const res = await fetch("/api/home");
+        const data: HomeResponse = await res.json();
+        setChatRooms(data.chatRooms);
+    };
+
+    useEffect(() => {
+        fetchHomeData();
+    }, [])
+
+    const myUserId = "user-1";
+
+    const room = chatRooms.find((room) => room.id === roomId);
+    const members = room?.members ?? [];
+    const myUser = members.find((member) => member.id === myUserId);
+    const user = room?.members?.find((member) => member.id !== myUserId);
+    const messages = room?.messages ?? [];
 
     return (
         <div className="bg-gray-200 min-h-screen flex flex-col">
@@ -46,12 +62,17 @@ export default function ChatPage({ params }: { params: Promise<{ roomId: string 
                     messages={messages}
                     myUser={myUser}
                     user={user}
+                    room={room}
                 />
             </div>
 
             {/* 채팅입력 영역 */}
             <div className="shrink-0">
-                <MessageInput />
+                <MessageInput
+                    roomId={roomId}
+                    myUserId={myUserId}
+                    onSend={fetchHomeData}
+                />
             </div>
         </div>
     )

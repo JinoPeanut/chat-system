@@ -1,6 +1,35 @@
 import { Plus, Smile } from "lucide-react"
+import { useState } from "react";
 
-export default function MessageInput() {
+type MessageInputProps = {
+    roomId: string,
+    myUserId: string,
+    onSend: () => Promise<void>,
+}
+
+export default function MessageInput({ roomId, myUserId, onSend }: MessageInputProps) {
+
+    const [content, setContent] = useState("");
+
+    const handleSend = async () => {
+        if (!content.trim()) return;
+
+        const res = await fetch("api/messages", {
+            method: "POST",
+            headers: { "Content-type": "application/json", },
+            body: JSON.stringify({
+                senderId: myUserId,
+                chatRoomId: roomId,
+                content,
+            })
+        });
+
+        if (!res.ok) return;
+
+        setContent("");
+        await onSend();
+    }
+
     return (
         <div className="
             m-2 border-gray-400/50 border bg-gray-600
@@ -16,7 +45,14 @@ export default function MessageInput() {
                     {/* 채팅입력칸 */}
                     <input
                         type="text"
-                        placeholder={`님께 메세지 보내기`}
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                handleSend();
+                            }
+                        }}
+                        placeholder="메세지를 입력하세요."
                         className="
                             w-full bg-transparent outline-none text-white 
                             placeholder:text-gray-300 flex-1 min-w-0"

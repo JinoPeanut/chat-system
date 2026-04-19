@@ -1,10 +1,11 @@
 "use client"
 
-import { DEPARTMENT } from "@/types/department"
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronRight, Settings, MessageCircle, Home } from "lucide-react"
-import { UserStatus } from "@/types/chat";
+import { Chat, UserStatus } from "@/types/chat";
 import { useRouter } from "next/navigation"
+import { Department } from "@/types/department";
+import { HomeResponse } from "@/types/notice";
 
 export function getStatusColor(status: UserStatus) {
     switch (status) {
@@ -14,10 +15,49 @@ export function getStatusColor(status: UserStatus) {
     }
 }
 
+export function getStatusText(status: UserStatus) {
+    switch (status) {
+        case "online": return "온라인"
+        case "offline": return "오프라인"
+        case "AFK": return "자리비움"
+    }
+}
+
 export default function SideBar() {
 
     const [openDepts, setOpenDepts] = useState<string[]>([]);
+    const [departments, setDepartments] = useState<Department[]>([]);
+    const [chatRooms, setChatRooms] = useState<Chat[]>([]);
     const router = useRouter();
+
+    const myUserId = "user-1";
+    const myUser = departments.flatMap((dept) => dept.members).find((user) => user.id === myUserId);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const deptRes = await fetch("/api/departments");
+            const deptData = await deptRes.json();
+            setDepartments(deptData);
+
+            // 채팅창 정보가 필요해서 추가
+            const homeRes = await fetch("/api/home");
+            const homeData: HomeResponse = await homeRes.json();
+            setChatRooms(homeData.chatRooms);
+        };
+
+        fetchData();
+    }, [])
+
+    const handleOpenChat = (targetUserId: string) => {
+        const room = chatRooms.find((room) => {
+            return room.members?.some((member) => member.id === myUserId)
+                && room.members?.some((member) => member.id === targetUserId);
+        });
+
+        if (!room) return;
+
+        router.push(`/chat/${room.id}`);
+    }
 
     return (
         <div className="flex w-1/4 min-h-screen bg-purple-500 rounded-l-lg">
@@ -46,11 +86,11 @@ export default function SideBar() {
                             사진
                         </div>
                         <div className="justify-between">
-                            <div>
-                                {`이름`}
-                                <div>
-                                    {`(온라인)`}
-                                    {`현재상태`}
+                            <div className="pl-2">
+                                {myUser?.name}
+                                <div className="flex gap-1 items-center">
+                                    <div className={`rounded-full w-[8px] h-[8px] ${myUser ? getStatusColor(myUser.status) : "bg-gray-400"}`}></div>
+                                    {myUser ? getStatusText(myUser.status) : "오프라인"}
                                 </div>
                             </div>
                         </div>
@@ -64,7 +104,7 @@ export default function SideBar() {
 
                 {/* 부서 목록 */}
                 <div className="p-4">
-                    {Object.values(DEPARTMENT).map((dept) => {
+                    {departments.map((dept) => {
                         return (
                             <div key={dept.id}>
                                 {/* 부서명 */}
@@ -107,7 +147,7 @@ export default function SideBar() {
                                             <MessageCircle
                                                 size={16}
                                                 className="hover:text-gray-200 cursor-pointer"
-                                                onClick={() => router.push(`/chat/${user.id}`)}
+                                                onClick={() => handleOpenChat(user.id)}
                                             />
                                             <Settings size={16} className="hover:text-gray-200 cursor-pointer" />
                                         </div>

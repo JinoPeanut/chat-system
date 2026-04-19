@@ -1,29 +1,35 @@
 "use client"
 
-import { User, USERS } from "@/types/chat"
-import { NOTICE, NOTICE_TABS, NoticeScope } from "@/types/notice";
-import { useState } from "react";
+import { User } from "@/types/chat"
+import { HomeResponse, Notice, NOTICE_TABS, NoticeScope } from "@/types/notice";
+import { useEffect, useState } from "react";
 
 const getCategoryName = (category: string) => {
     if (category === "notice") return "공지사항"
-    if (category === "event") return "워크숍"
+    if (category === "event") return "이벤트"
     if (category === "update") return "업데이트"
     if (category === "etc") return "기타"
 }
 
 export default function NoticePanel() {
-    const myUserId = USERS.user1.id;
-
     const [activeTab, setActiveTab] = useState<NoticeScope>("all");
+    const [users, setUsers] = useState<User[]>([]);
+    const [notices, setNotices] = useState<Notice[]>([]);
 
-    const notices = NOTICE.allIds
-        .map((id) => NOTICE.byId[id])
+    const filteredNotices = notices
         .filter((notice) => activeTab === "all" || notice.category === activeTab);
 
-    const usersById = Object.values(USERS).reduce<Record<string, User>>((acc, user) => {
-        acc[user.id] = user;
-        return acc;
-    }, {});
+    useEffect(() => {
+        const fetchHomeData = async () => {
+            const res = await fetch("/api/home");
+            const data: HomeResponse = await res.json();
+
+            setUsers(data.users);
+            setNotices(data.notices);
+        }
+
+        fetchHomeData();
+    }, [])
 
     return (
         <div className="border border-gray-200 rounded-md
@@ -50,10 +56,10 @@ export default function NoticePanel() {
 
             {/* 게시글 목록 */}
             <div className="flex flex-col gap-2">
-                {notices.map((notice) => {
-                    const author = usersById[notice.authorId];
-                    const authorName = author.name ?? "알 수 없음";
-                    const authorProfile = author.profilePic;
+                {filteredNotices.map((notice) => {
+                    const author = notice.author;
+                    const authorName = author?.name ?? "알 수 없음";
+                    const authorProfile = author?.profilePic;
 
                     return (
                         <div key={notice.id}>
@@ -70,7 +76,7 @@ export default function NoticePanel() {
                                 />
                                 {/* 이름, 직급 */}
                                 <span className="text-sm text-gray-400 tracking-tight">
-                                    {authorName} {author.position}
+                                    {authorName} {author?.position}
                                 </span>
 
                                 {/* 업로드 시간 */}

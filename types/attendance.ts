@@ -7,5 +7,3 @@ export type AttendanceType = {
     checkOutAt: number | null,
     workMinutes: number | null,
 }
-
-export const ATTENDANCE: AttendanceType[] = [];
