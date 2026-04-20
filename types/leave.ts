@@ -1,13 +1,15 @@
 export type LeaveType = "annual" | "half_am" | "half_pm";
 export type LeaveStatus = "pending" | "approved" | "rejected";
 
-export type Leave = {
+// 남은 연차 보여주기
+export type LeaveBalance = {
     userId: string,
     totalDays: number,
     usedDays: number,
     useHours: number,
 }
 
+// 연차 사용시점에 대한 자세한 정보
 export type LeaveHistory = {
     id: string,
     userId: string,
@@ -20,35 +22,7 @@ export type LeaveHistory = {
     createdAt: string,
 }
 
-export const LEAVE: Record<string, Leave> = {
-    leave1: {
-        userId: "user-1",
-        totalDays: 15,
-        usedDays: 2,
-        useHours: 0,
-    }
+export type LeaveResponse = {
+    leaveBalance: LeaveBalance[],
+    leaveHistory: LeaveHistory[],
 }
-
-export const LEAVE_HISTORY: LeaveHistory[] = [
-    {
-        id: "lh-1",
-        userId: "user-1",
-        leaveDate: "2026-01-15",
-        usedDays: 1,
-        usedHours: 8,
-        leaveType: "annual",
-        status: "approved",
-        reason: "개인 사유",
-        createdAt: "2026-01-05T09:10:00.000Z",
-    },
-    {
-        id: "lh-2",
-        userId: "user-1",
-        leaveDate: "2026-03-21",
-        usedDays: 0.5,
-        usedHours: 4,
-        leaveType: "half_pm",
-        status: "approved",
-        createdAt: "2026-03-10T02:20:00.000Z",
-    },
-];

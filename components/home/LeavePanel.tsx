@@ -1,12 +1,12 @@
 "use client"
 
-import { LEAVE, LEAVE_HISTORY, LeaveHistory, LeaveType } from "@/types/leave";
+import { LeaveBalance, LeaveHistory, LeaveResponse, LeaveType } from "@/types/leave";
 import { ListChecks, PackageOpen, TentTree } from "lucide-react";
 import { useEffect, useState } from "react";
 
 type ApplyForm = {
     leaveDate: string,
-    leaveType: LeaveType,
+    leaveType: LeaveType, // "annual" | "half_am" | "half_pm"
     reason: string,
 }
 
@@ -27,22 +27,36 @@ export default function LeavePanel() {
 
     const myUserId = "user-1";
     const myUserName = "홍길동";
-    const myLeave = Object.values(LEAVE).find((u) => u.userId === myUserId);
 
+    const [leaveBalance, setLeaveBalance] = useState<LeaveBalance[]>([]);
+    const [leaveHistory, setLeaveHistory] = useState<LeaveHistory[]>([]);
+
+    const fetchLeaveData = async () => {
+        const res = await fetch("/api/leave");
+        const data: LeaveResponse = await res.json();
+        setLeaveBalance(data.leaveBalance);
+        setLeaveHistory(data.leaveHistory);
+    };
+
+    const myLeaveBalance = leaveBalance.find((u) => u.userId === myUserId);
+    const myLeaveHistory = leaveHistory.filter((h) => h.userId === myUserId);
+
+    // 내역보기 모달 상태값
     const [isOpen, setIsOpen] = useState(false);
+
+    // 연차신청 모달 상태값
     const [isApplyOpen, setIsApplyOpen] = useState(false);
+
     const [applyForm, setApplyForm] = useState<ApplyForm>({
         leaveDate: "",
         leaveType: "annual",
         reason: "",
     });
-    const [leaveHistory, setLeaveHistory] = useState<LeaveHistory[]>(
-        LEAVE_HISTORY.filter((h) => h.userId === myUserId)
-    );
 
-    const remainDays = myLeave ? myLeave?.totalDays - myLeave?.usedDays : 0;
-    const remainHours = myLeave ? 8 - myLeave.useHours : 0;
-    const leavePercent = myLeave ? Math.min(100, (myLeave?.usedDays / myLeave.totalDays) * 100) : 0;
+    const remainDays = myLeaveBalance ? myLeaveBalance?.totalDays - myLeaveBalance?.usedDays : 0;
+    const remainHours = myLeaveBalance ? 8 - myLeaveBalance.useHours : 0;
+    const usedDays = myLeaveBalance ? myLeaveBalance.usedDays : 0;
+    const leavePercent = myLeaveBalance ? Math.min(100, (myLeaveBalance?.usedDays / myLeaveBalance.totalDays) * 100) : 0;
 
     const openModal = () => setIsOpen(true);
     const closeModal = () => setIsOpen(false);
@@ -101,6 +115,10 @@ export default function LeavePanel() {
     }
 
     useEffect(() => {
+        fetchLeaveData();
+    }, [])
+
+    useEffect(() => {
         if (!isOpen) return;
 
         function handleKeyDown(e: KeyboardEvent) {
@@ -153,7 +171,7 @@ export default function LeavePanel() {
                         잔여 연차
                     </p>
                     <p className="font-bold">
-                        {remainDays}일
+                        {Math.floor(remainDays)}일
                     </p>
                     <p className="text-xs leading-tight text-gray-500 group-hover:text-blue-500">
                         {remainHours}시간
@@ -171,10 +189,10 @@ export default function LeavePanel() {
                         사용 연차
                     </p>
                     <p className="font-bold">
-                        {myLeave?.usedDays}일
+                        {Math.floor(usedDays)}일
                     </p>
                     <p className="text-xs leading-tight text-gray-500 group-hover:text-blue-500">
-                        {myLeave?.useHours}시간
+                        {myLeaveBalance?.useHours}시간
                     </p>
                 </div>
 
@@ -189,7 +207,7 @@ export default function LeavePanel() {
                         총 연차
                     </p>
                     <p className="font-bold">
-                        {myLeave?.totalDays}일
+                        {myLeaveBalance?.totalDays}일
                     </p>
                 </div>
             </div>
@@ -250,7 +268,7 @@ export default function LeavePanel() {
                         <div className="max-h-[360px] overflow-y-auto">
                             {leaveHistory.length === 0
                                 ? <p className="py-6 text-center text-sm text-gray-500">내역이 없습니다</p>
-                                : (leaveHistory.map((item) => (
+                                : (myLeaveHistory.map((item) => (
                                     <div
                                         key={item.id}
                                         className="grid grid-cols-7 gap-2 border-b py-2 text-sm text-center"
@@ -309,8 +327,8 @@ export default function LeavePanel() {
                                     className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
                                 >
                                     <option value="annual">연차</option>
-                                    <option value="half-am">오전 반차</option>
-                                    <option value="half-pm">오후 반차</option>
+                                    <option value="half_am">오전 반차</option>
+                                    <option value="half_pm">오후 반차</option>
                                 </select>
                             </div>
 

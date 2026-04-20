@@ -1,7 +1,7 @@
 import { User } from "./chat"
 
 export type Department = {
-    readonly id: string, // 부서 아이디
-    readonly name: string, // 부서 이름
-    readonly members: User[], // 부서 인원
+    id: string, // 부서 아이디
+    name: string, // 부서 이름
+    members: User[], // 부서 인원
 }
