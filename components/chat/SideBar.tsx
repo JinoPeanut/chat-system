@@ -67,7 +67,7 @@ export default function SideBar() {
                 <button
                     onClick={() => router.push("/")}
                     className="
-                        rounded-lg border-gray-300 w-[50px] h-[50px]
+                        rounded-lg border-gray-300 w-[50px] h-[50px] cursor-pointer
                         inline-flex justify-center items-center hover:bg-gray-400 mr-2
                 ">
                     <Home />

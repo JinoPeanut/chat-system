@@ -37,6 +37,11 @@ enum LeaveStatus {
   rejected
 }
 
+enum ProfileWork {
+  office
+  house
+}
+
 model User {
   id          String      @id
   name        String
@@ -50,6 +55,7 @@ model User {
   notices     Notice[]
   leaveBalance LeaveBalance?
   leaveHistory LeaveHistory[]
+  profile     Profile?     @relation("profileUser")
 }
 
 model Message {
@@ -113,4 +119,14 @@ model LeaveHistory {
   createdAt   DateTime         @default(now())
 
   user        User             @relation(fields: [userId], references: [id])
+}
+
+model Profile {
+  userId      String           @id
+  statusMsg   String?          
+  statusWork  ProfileWork
+  bestWorker  Boolean
+  tel         String
+
+  profileUser User             @relation("profileUser", fields: [userId], references: [id])
 }

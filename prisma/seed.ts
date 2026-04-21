@@ -309,6 +309,18 @@ async function main() {
             createdAt: new Date("2026-03-03T07:10:00.000Z"),
         },
     });
+
+    await prisma.profile.upsert({
+        where: { userId: "user-1" },
+        update: {},
+        create: {
+            userId: "user-1",
+            statusMsg: "오늘도 화이팅!",
+            statusWork: "office",
+            bestWorker: false,
+            tel: "010-1234-5678",
+        }
+    })
 }
 
 main()
