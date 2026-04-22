@@ -32,7 +32,7 @@ export default function ProfileCard() {
 
     return (
         <div className="
-                border border-gray-300 rounded-xl
+                border border-gray-300 rounded-xl mb-4
                 shadow-lg min-h-[45%] pb-2 overflow-hidden
             ">
             {/* 설정 */}
@@ -48,7 +48,7 @@ export default function ProfileCard() {
                     <img
                         alt="사진"
                         className="absolute w-[4rem] h-[4rem] bg-gray-400 rounded-full
-                        border-3 border-white top-[-40px]"
+                        top-[-40px] ring-3 ring-white/50"
                     />
                     <div className="flex gap-1 font-bold items-center mt-8 tracking-tight">
                         <p>{myProfile?.profileUser.name}</p>

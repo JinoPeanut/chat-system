@@ -246,6 +246,7 @@ export default function LeavePanel() {
                 </button>
             </div>
 
+            {/* 내역보기 모달 */}
             {isOpen &&
                 (<div
                     onClick={closeModal}
@@ -296,6 +297,7 @@ export default function LeavePanel() {
                 </div>)
             }
 
+            {/* 연차신청 모달 */}
             {isApplyOpen &&
                 (<div onClick={closeApplyModal}
                     className="fixed inset-0 bg-black/50 flex items-center justify-center"

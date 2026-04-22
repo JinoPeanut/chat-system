@@ -3,6 +3,7 @@ import LeavePanel from "@/components/home/LeavePanel";
 import NoticePanel from "@/components/home/NoticePanel";
 import ProfileCard from "@/components/home/ProfileCard";
 import RecentChatsPanel from "@/components/home/RecentChatsPanel";
+import TodaySchedulePanel from "@/components/home/TodaySchedulePanel";
 
 export default function HomePage() {
   return (
@@ -34,6 +35,7 @@ export default function HomePage() {
         {/* 오른쪽 - 오늘일정, 프로필카드 */}
         <div className="col-span-3">
           <ProfileCard />
+          <TodaySchedulePanel />
         </div>
       </div>
     </div>

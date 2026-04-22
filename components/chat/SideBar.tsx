@@ -82,7 +82,7 @@ export default function SideBar() {
                 <div className="flex p-4 justify-between items-center">
                     {/* 사진 */}
                     <div className="flex">
-                        <div className="rounded-full bg-gray-400 w-[50px] h-[50px]">
+                        <div className="rounded-full bg-gray-400 w-[50px] h-[50px] ring-2 ring-white/50">
                             사진
                         </div>
                         <div className="justify-between">
