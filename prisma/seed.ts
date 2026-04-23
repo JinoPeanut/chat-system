@@ -321,6 +321,52 @@ async function main() {
             tel: "010-1234-5678",
         }
     })
+
+    await prisma.schedule.deleteMany();
+
+    await prisma.schedule.create({
+        data: {
+            userId: "user-1",
+            title: "팀 회의",
+            titleMemo: "노트북 꼭 챙겨가기!",
+            content: "이번 주 스프린트 계획 논의",
+            startAt: new Date("2026-04-23T11:00:00"),
+            endAt: new Date("2026-04-23T12:00:00"),
+        }
+    })
+
+    await prisma.schedule.create({
+        data: {
+            userId: "user-1",
+            title: "컴포넌트 리팩토링",
+            titleMemo: "SideBar 먼저",
+            content: "기술 부채 정리",
+            startAt: new Date("2026-04-23T14:00:00"),
+            endAt: new Date("2026-04-23T16:00:00"),
+        }
+    })
+
+    await prisma.schedule.create({
+        data: {
+            userId: "user-1",
+            title: "코드 리뷰",
+            titleMemo: undefined,
+            content: "PR #12 리뷰",
+            startAt: new Date("2026-04-23T16:30:00"),
+            endAt: new Date("2026-04-23T17:30:00"),
+        }
+    })
+
+    await prisma.schedule.create({
+        data: {
+            userId: "user-1",
+            title: "디자인 회의",
+            titleMemo: "피그마 링크 준비",
+            content: "UI 개선 논의",
+            startAt: new Date("2026-04-23T10:00:00"),
+            endAt: new Date("2026-04-23T11:00:00"),
+        }
+    })
 }
 
 main()

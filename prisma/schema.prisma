@@ -56,6 +56,7 @@ model User {
   leaveBalance LeaveBalance?
   leaveHistory LeaveHistory[]
   profile     Profile?     @relation("profileUser")
+  schedule    Schedule[]
 }
 
 model Message {
@@ -129,4 +130,16 @@ model Profile {
   tel         String
 
   profileUser User             @relation("profileUser", fields: [userId], references: [id])
+}
+
+model Schedule {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  titleMemo String?
+  content   String?
+  startAt   DateTime
+  endAt     DateTime?
+
+  user      User     @relation(fields: [userId], references: [id])
 }
