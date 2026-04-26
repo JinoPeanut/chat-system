@@ -367,6 +367,28 @@ async function main() {
             endAt: new Date("2026-04-23T11:00:00"),
         }
     })
+
+    await prisma.schedule.create({
+        data: {
+            userId: "user-1",
+            title: "마무리 잔업",
+            titleMemo: "UI 남았다!",
+            content: null,
+            startAt: new Date("2026-04-23T19:00:00"),
+            endAt: new Date("2026-04-23T20:00:00"),
+        }
+    })
+
+    await prisma.schedule.create({
+        data: {
+            userId: "user-1",
+            title: "일정 패널 완성",
+            titleMemo: "데이터 연결 확인",
+            content: null,
+            startAt: new Date("2026-04-26T19:00:00"),
+            endAt: new Date("2026-04-26T20:00:00"),
+        }
+    })
 }
 
 main()
