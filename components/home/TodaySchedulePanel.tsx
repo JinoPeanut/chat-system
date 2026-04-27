@@ -128,6 +128,49 @@ export default function TodaySchedulePanel() {
         setMode("list");
     }
 
+    const handleEdit = async () => {
+        if (!form.title || !form.startAt || !selectedSchedule?.id) return;
+
+        const res = await fetch("/api/schedule", {
+            method: "PATCH",
+            headers: { "Content-type": "application/json" },
+            body: JSON.stringify({
+                id: selectedSchedule?.id,
+                userId: myUserId,
+                title: form.title,
+                titleMemo: form.titleMemo,
+                content: form.content,
+                startAt: form.startAt,
+                endAt: form.endAt,
+            })
+        });
+
+        if (!res.ok) return;
+
+        await fetchScheduleData();
+
+        setMode("list");
+    }
+
+    const handleDelete = async () => {
+        if (!selectedSchedule?.id) return;
+
+        const res = await fetch("/api/schedule", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                id: selectedSchedule?.id,
+                userId: myUserId,
+            }),
+        });
+
+        if (!res.ok) return;
+
+        await fetchScheduleData();
+
+        setMode("list");
+    }
+
     useEffect(() => {
         fetchScheduleData();
     }, [])
@@ -421,12 +464,14 @@ export default function TodaySchedulePanel() {
 
                                     <div className="flex gap-2 mt-auto">
                                         {mode === "edit" && (
-                                            <button className="flex-1 py-2 rounded-lg border border-red-300 text-red-400 hover:bg-red-50 text-sm cursor-pointer">
+                                            <button
+                                                onClick={handleDelete}
+                                                className="flex-1 py-2 rounded-lg border border-red-300 text-red-400 hover:bg-red-50 text-sm cursor-pointer">
                                                 삭제
                                             </button>
                                         )}
                                         <button
-                                            onClick={mode === "add" ? handleAdd : undefined}
+                                            onClick={mode === "add" ? handleAdd : handleEdit}
                                             className="flex-1 py-2 rounded-lg bg-violet-500 text-white hover:bg-violet-600 text-sm cursor-pointer">
                                             {mode === "add" ? "추가" : "수정"}
                                         </button>

@@ -24,3 +24,35 @@ export async function POST(request: Request) {
 
     return NextResponse.json(schedule);
 }
+
+export async function PATCH(request: Request) {
+    const body = await request.json();
+
+    const schedule = await prisma.schedule.update({
+        where: {
+            id: body.id
+        },
+        data: {
+            userId: body.userId,
+            title: body.title,
+            titleMemo: body.titleMemo ? body.titleMemo : null,
+            content: body.content ? body.content : null,
+            startAt: new Date(body.startAt),
+            endAt: body.endAt ? new Date(body.endAt) : null,
+        }
+    })
+
+    return NextResponse.json(schedule);
+}
+
+export async function DELETE(request: Request) {
+    const body = await request.json();
+
+    const schedule = await prisma.schedule.delete({
+        where: {
+            id: body.id,
+        }
+    });
+
+    return NextResponse.json(schedule);
+}

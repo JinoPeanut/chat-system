@@ -1,5 +1,5 @@
 import AttendancePanel from "@/components/home/AttendancePanel";
-import LeavePanel from "@/components/home/LeavePanel";
+import LeavePanel from "@/components/home/leave/LeavePanel";
 import NoticePanel from "@/components/home/NoticePanel";
 import ProfileCard from "@/components/home/ProfileCard";
 import RecentChatsPanel from "@/components/home/RecentChatsPanel";

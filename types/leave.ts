@@ -1,6 +1,12 @@
 export type LeaveType = "annual" | "half_am" | "half_pm";
 export type LeaveStatus = "pending" | "approved" | "rejected";
 
+export type ApplyForm = {
+    leaveDate: string,
+    leaveType: LeaveType, // "annual" | "half_am" | "half_pm"
+    reason: string,
+}
+
 // 남은 연차 보여주기
 export type LeaveBalance = {
     userId: string,
