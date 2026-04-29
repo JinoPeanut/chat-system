@@ -49,6 +49,10 @@ model User {
   position    String
   status      UserStatus  @default(offline)
   profilePic  String?
+  email       String      @unique
+  passwordHash  String
+  createdAt   DateTime    @default(now())
+  companyId   String
 
   messages    Message[]   @relation("MessageSender")
   chatRooms   ChatRoom[]  @relation("ChatMembers")
@@ -57,6 +61,7 @@ model User {
   leaveHistory LeaveHistory[]
   profile     Profile?     @relation("profileUser")
   schedule    Schedule[]
+  company     Company      @relation(fields: [companyId], references: [id])
 }
 
 model Message {
@@ -142,4 +147,12 @@ model Schedule {
   endAt     DateTime?
 
   user      User     @relation(fields: [userId], references: [id])
+}
+
+model Company {
+  id        String    @id
+  name      String  
+  inviteCode String   @unique
+
+  users     User[]
 }

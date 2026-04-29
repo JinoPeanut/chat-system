@@ -3,9 +3,27 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
+    await prisma.company.upsert({
+        where: { id: "company-1" },
+        update: {
+            name: "땅콩컴퍼니",
+            inviteCode: "Peanut-2026",
+        },
+        create: {
+            id: "company-1",
+            name: "땅콩컴퍼니",
+            inviteCode: "PEANUT-2026",
+        },
+    });
+
     await prisma.user.upsert({
         where: { id: "user-1" },
-        update: {},
+        update: {
+            email: "hong@example.com",
+            passwordHash: "temp-hash-test1234",
+            createdAt: new Date("2026-04-01T09:00:00.000Z"),
+            companyId: "company-1",
+        },
         create: {
             id: "user-1",
             name: "홍길동",
@@ -13,12 +31,21 @@ async function main() {
             position: "사원",
             status: "online",
             profilePic: null,
+            email: "hong@example.com",
+            passwordHash: "temp-hash-test1234",
+            createdAt: new Date("2026-04-01T09:00:00.000Z"),
+            companyId: "company-1",
         }
     });
 
     await prisma.user.upsert({
         where: { id: "user-2" },
-        update: {},
+        update: {
+            email: "kim@example.com",
+            passwordHash: "temp-hash-test5678",
+            createdAt: new Date("2026-04-02T09:00:00.000Z"),
+            companyId: "company-1"
+        },
         create: {
             id: "user-2",
             name: "김철수",
@@ -26,12 +53,21 @@ async function main() {
             position: "주임",
             status: "offline",
             profilePic: null,
+            email: "kim@example.com",
+            passwordHash: "temp-hash-test5678",
+            createdAt: new Date("2026-04-02T09:00:00.000Z"),
+            companyId: "company-1"
         }
     });
 
     await prisma.user.upsert({
         where: { id: "user-3" },
-        update: {},
+        update: {
+            email: "lee@example.com",
+            passwordHash: "temp-hash-test9999",
+            createdAt: new Date("2026-04-03T09:00:00.000Z"),
+            companyId: "company-1"
+        },
         create: {
             id: "user-3",
             name: "이유리",
@@ -39,6 +75,10 @@ async function main() {
             position: "대리",
             status: "AFK",
             profilePic: null,
+            email: "lee@example.com",
+            passwordHash: "temp-hash-test9999",
+            createdAt: new Date("2026-04-03T09:00:00.000Z"),
+            companyId: "company-1"
         }
     });
 

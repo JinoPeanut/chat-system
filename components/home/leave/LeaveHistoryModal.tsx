@@ -53,7 +53,7 @@ export default function LeaveHistoryModal(
                         <div className="flex items-center justify-center mt-2">
                             <button
                                 className="border-gray-300 border py-2 px-4 rounded-md 
-                                    hover:bg-gray-300"
+                                    hover:bg-gray-300 cursor-pointer"
                                 onClick={closeModal}>
                                 닫기
                             </button>

@@ -90,7 +90,7 @@ export default function TodaySchedulePanel() {
                 d.getDate() === selectedDay.day
             )
         })
-        .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime())
+        .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
 
     const totalSchedule = scheduleHome
         .filter((u) => u.userId === myUserId)
@@ -301,23 +301,44 @@ export default function TodaySchedulePanel() {
                                 {["일", "월", "화", "수", "목", "금", "토"].map((d) => (
                                     <div key={d} className="text-center text-xs text-gray-400">{d}</div>
                                 ))}
-                                {days.map((day, index) => (
-                                    <div
-                                        key={index}
-                                        onClick={() => setSelectedDay({ year: currentYear, month: currentMonth, day: day })}
-                                        className={`flex flex-col items-center text-sm rounded-md w-[3rem] h-[4rem]
+                                {days.map((day, index) => {
+
+                                    // 해당 day 의 일정만 필터링
+                                    const daySchedules = scheduleDetail.filter((s) => {
+                                        const d = new Date(s.startAt)
+                                        return (
+                                            s.userId === myUserId &&
+                                            d.getFullYear() === currentYear &&
+                                            d.getMonth() === currentMonth &&
+                                            d.getDate() === day
+                                        )
+                                    })
+
+                                    return (
+                                        <div
+                                            key={index}
+                                            onClick={() => setSelectedDay({ year: currentYear, month: currentMonth, day: day })}
+                                            className={`flex flex-col items-center text-sm rounded-md w-[3rem] h-[4rem]
                                         ${day === today && currentMonth === month && currentYear === year
-                                                ? "bg-purple-500 text-white hover:bg-purple-300"
-                                                : ""}
+                                                    ? "bg-purple-500 text-white hover:bg-purple-300"
+                                                    : ""}
                                         ${day === null ? "" : "cursor-pointer hover:bg-gray-100"}
                                         ${selectedDay?.year === currentYear && selectedDay.month === currentMonth && selectedDay.day === day
-                                                ? "border border-purple-500"
-                                                : ""}
+                                                    ? "border border-purple-500"
+                                                    : ""}
                                     `}
-                                    >
-                                        {day === null ? "" : day}
-                                    </div>
-                                ))}
+                                        >
+                                            {day === null ? "" : day}
+
+                                            <div className="flex flex-wrap justify-center gap-1 mt-1 px-2">
+                                                {daySchedules.slice(0, 6).map((_, i) => (
+                                                    <div key={i} className={`w-[7px] h-[7px] rounded-full ${scheduleColors[i % scheduleColors.length]}`} />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+
                             </div>
                         </div>
 

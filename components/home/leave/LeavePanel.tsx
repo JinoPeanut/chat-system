@@ -122,12 +122,12 @@ export default function LeavePanel() {
             <div className="mt-3 flex gap-2">
                 <button
                     onClick={openApplyModal}
-                    className="flex-1 bg-green-500 text-white rounded-md py-2 text-sm hover:bg-green-400">
+                    className="flex-1 bg-green-500 text-white rounded-md py-2 text-sm hover:bg-green-400 cursor-pointer">
                     연차 신청
                 </button>
                 <button
                     onClick={openModal}
-                    className="flex-1 bg-gray-200 rounded-md py-2 text-sm hover:bg-gray-300
+                    className="flex-1 bg-gray-200 rounded-md py-2 text-sm hover:bg-gray-300 cursor-pointer
                 ">
                     내역 보기
                 </button>

@@ -10,7 +10,7 @@ export default function LeaveActionButton({ BtnType = "button", onClick, classNa
         <button
             type={BtnType}
             onClick={onClick}
-            className={`rounded-md px-3 py-2 text-sm ${className}`}
+            className={`rounded-md px-3 py-2 text-sm cursor-pointer ${className}`}
         >
             {name}
         </button>

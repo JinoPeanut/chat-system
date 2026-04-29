@@ -49,10 +49,11 @@ export default function SideBar() {
     }, [])
 
     const handleOpenChat = (targetUserId: string) => {
-        const room = chatRooms.find((room) => {
-            return room.members?.some((member) => member.id === myUserId)
-                && room.members?.some((member) => member.id === targetUserId);
-        });
+        const room = chatRooms.find((room) =>
+            room.room === "personal" &&
+            room.members?.some((member) => member.id === myUserId) &&
+            room.members?.some((member) => member.id === targetUserId)
+        );
 
         if (!room) return;
 
@@ -140,7 +141,10 @@ export default function SideBar() {
                                             hover:rounded-md hover:bg-gray-700/30
                                     ">
                                         <div className={` rounded-full w-[8px] h-[8px] ${getStatusColor(user.status)}`}></div>
-                                        <span className="text-xl ">{user.name}</span>
+                                        <div className="flex gap-1 items-end">
+                                            <span className="font-bold text-medium">{user.name}</span>
+                                            <span className="text-xs font-bold text-gray-700 pb-[3px]">{user.position}</span>
+                                        </div>
                                         <div className="
                                             invisible group-hover:visible flex gap-1 ml-auto
                                         ">

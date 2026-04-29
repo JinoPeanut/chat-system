@@ -9,6 +9,8 @@ export type User = {
     position: string, // 직급
     status: UserStatus, // 접속 상태
     profilePic: string | null, // 프로필 사진
+    email: string,
+    createdAt: string,
 }
 
 export type Message = {
