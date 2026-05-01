@@ -23,6 +23,17 @@ export async function POST(request: Request) {
         );
     }
 
+    const company = await prisma.company.findUnique({
+        where: { inviteCode: body.inviteCode }
+    })
+
+    if (!company) {
+        return NextResponse.json(
+            { message: "유효하지 않은 초대코드 입니다" },
+            { status: 404 }
+        )
+    }
+
     const passwordHash = await bcrypt.hash(body.password, 10);
 
     const user = await prisma.user.create({
@@ -35,6 +46,8 @@ export async function POST(request: Request) {
             position: body.position,
             status: "offline",
             profilePic: null,
+            createdAt: new Date(body.createdAt),
+            companyId: company.id,
         },
     });
 
