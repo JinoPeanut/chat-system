@@ -7,7 +7,7 @@ import SignupStep from "./_components/SignupStep";
 
 export default function SignUp() {
 
-    const [step, setStep] = useState(1);
+    const [step, setStep] = useState<1 | 2 | 3>(1);
     const [form, setForm] = useState({
         email: "",
         password: "",
