@@ -46,7 +46,6 @@ export async function POST(request: Request) {
             position: body.position,
             status: "offline",
             profilePic: null,
-            createdAt: new Date(body.createdAt),
             companyId: company.id,
         },
     });

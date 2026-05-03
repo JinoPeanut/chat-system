@@ -1,1 +1,15 @@
 @import "tailwindcss";
+
+@keyframes step-pass {
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: translateX(100%);
+    }
+}
+
+.animate-step-pass {
+    animation: step-pass 0.6s ease-in-out;
+}

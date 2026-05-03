@@ -71,6 +71,8 @@ export default function AccountInfo({ form, error, onChange, onNext, onBlurConfi
                 >
                     다음
                 </button>
+
+                {/* 로그인화면 개발시 - 기능추가 */}
                 <button
                     className="w-full bg-gray-200 rounded-lg font-bold py-2
                             hover:bg-gray-300 cursor-pointer"
