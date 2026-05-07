@@ -6,6 +6,19 @@ import { Chat, UserStatus } from "@/types/chat";
 import { useRouter } from "next/navigation"
 import { Department } from "@/types/department";
 import { HomeResponse } from "@/types/notice";
+import { useAuthStore } from "@/stores/useAuthStore";
+
+export function getStatusRingColor(status: UserStatus) {
+    switch (status) {
+        case "online":
+            return "ring-green-400";
+        case "offline":
+            return "ring-gray-400";
+        case "AFK":
+            return "ring-yellow-400";
+    }
+}
+
 
 export function getStatusColor(status: UserStatus) {
     switch (status) {
@@ -25,13 +38,37 @@ export function getStatusText(status: UserStatus) {
 
 export default function SideBar() {
 
+    const router = useRouter();
     const [openDepts, setOpenDepts] = useState<string[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
     const [chatRooms, setChatRooms] = useState<Chat[]>([]);
-    const router = useRouter();
+    const authUser = useAuthStore((state) => state.user);
+    const clearUser = useAuthStore((state) => state.clearUser);
 
-    const myUserId = "user-1";
-    const myUser = departments.flatMap((dept) => dept.members).find((user) => user.id === myUserId);
+    const myUserId = authUser?.id;
+    const myDepartment = authUser?.department;
+
+    const logout = async () => {
+        await fetch("/api/auth/logout", {
+            method: "POST"
+        });
+        clearUser();
+        router.push("/");
+    };
+
+    const handleOpenChat = async (targetUserId: string) => {
+        const res = await fetch("/api/chatrooms/personal", {
+            method: "POST",
+            headers: { "Content-type": "application/json" },
+            body: JSON.stringify({ targetUserId }),
+        });
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+
+        router.push(`/chat/${data.room.id}`);
+    }
 
     useEffect(() => {
         const fetchData = async () => {
@@ -48,25 +85,13 @@ export default function SideBar() {
         fetchData();
     }, [])
 
-    const handleOpenChat = (targetUserId: string) => {
-        const room = chatRooms.find((room) =>
-            room.room === "personal" &&
-            room.members?.some((member) => member.id === myUserId) &&
-            room.members?.some((member) => member.id === targetUserId)
-        );
-
-        if (!room) return;
-
-        router.push(`/chat/${room.id}`);
-    }
-
     return (
         <div className="flex w-1/5 min-h-screen bg-purple-300 rounded-l-lg">
             {/* 왼쪽 프로필칸 */}
             <div className="p-4 flex">
                 {/* 메인홈 버튼 */}
                 <button
-                    onClick={() => router.push("/")}
+                    onClick={() => router.push("/home")}
                     className="
                         rounded-lg border-gray-300 w-[50px] h-[50px] cursor-pointer
                         inline-flex justify-center items-center hover:bg-gray-400 mr-2
@@ -78,20 +103,21 @@ export default function SideBar() {
             <div className="border-r border-gray-400"></div>
 
             {/* 오른쪽 채팅목록 */}
-            <div className="w-full">
+            <div className="w-full flex flex-col">
                 {/* 내 프로필 */}
                 <div className="flex p-4 justify-between items-center">
                     {/* 사진 */}
                     <div className="flex">
-                        <div className="rounded-full bg-gray-400 w-[50px] h-[50px] ring-2 ring-white/50">
+                        <div className={`rounded-full bg-gray-400 w-[50px] h-[50px] ring-2 ${authUser && getStatusRingColor(authUser?.status)}`}>
                             사진
                         </div>
                         <div className="justify-between">
                             <div className="pl-2">
-                                {myUser?.name}
+                                <span>{authUser?.name}</span>
+                                <span className="text-xs text-gray-500">{myDepartment}</span>
                                 <div className="flex gap-1 items-center">
-                                    <div className={`rounded-full w-[8px] h-[8px] ${myUser ? getStatusColor(myUser.status) : "bg-gray-400"}`}></div>
-                                    {myUser ? getStatusText(myUser.status) : "오프라인"}
+                                    <div className={`rounded-full w-[8px] h-[8px] ${authUser ? getStatusColor(authUser.status) : "bg-gray-400"}`}></div>
+                                    {authUser ? getStatusText(authUser.status) : "오프라인"}
                                 </div>
                             </div>
                         </div>
@@ -133,7 +159,7 @@ export default function SideBar() {
                                 </div>
 
                                 {/* 부서 인원 목록 */}
-                                {openDepts.includes(dept.id) && dept.members?.map((user) => (
+                                {openDepts.includes(dept.id) && dept.members?.filter((member) => member.id !== myUserId).map((user) => (
                                     <div
                                         key={user.id}
                                         className="
@@ -160,6 +186,15 @@ export default function SideBar() {
                             </div>
                         )
                     })}
+                </div>
+
+                <div className="mt-auto p-4 mx-auto">
+                    <button
+                        onClick={logout}
+                        className="bg-gray-200 px-4 py-2 rounded-md hover:bg-red-500 cursor-pointer"
+                    >
+                        로그아웃
+                    </button>
                 </div>
             </div>
         </div>

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { cookies } from "next/headers";
 
 export async function POST(request: Request) {
     const body = await request.json();
@@ -38,17 +39,34 @@ export async function POST(request: Request) {
         );
     }
 
+    const updatedUser = await prisma.user.update({
+        where: { id: existingUser.id },
+        data: { status: "online" }
+    });
+
+    const cookieStore = await cookies();
+
+    cookieStore.set("auth_user_id", updatedUser.id, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7,
+    })
+
     // 모두 통과하면 값 리턴
     return NextResponse.json(
         {
             message: "로그인에 성공했습니다.",
             user: {
-                id: existingUser.id,
-                name: existingUser.name,
-                email: existingUser.email,
-                department: existingUser.department,
-                position: existingUser.position,
-                companyId: existingUser.companyId,
+                id: updatedUser.id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                department: updatedUser.department,
+                position: updatedUser.position,
+                status: updatedUser.status,
+                createdAt: updatedUser.createdAt,
+                companyId: updatedUser.companyId,
             },
         },
         { status: 200 }

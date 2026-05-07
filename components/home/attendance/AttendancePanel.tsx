@@ -8,8 +8,8 @@ export default function AttendancePanel() {
     const {
         formatKoreanTime,
         formatMinutes,
-        now,
-        setNow,
+        currentTime,
+        setCurrentTime,
         todayAttendance,
         checkInText,
         checkOutText,
@@ -22,7 +22,7 @@ export default function AttendancePanel() {
 
     // 1분마다 시간 업데이트
     useEffect(() => {
-        const timer = setInterval(() => setNow(new Date()), 60_000);
+        const timer = setInterval(() => setCurrentTime(new Date()), 60_000);
         return () => clearInterval(timer);
     }, [])
 
@@ -37,7 +37,7 @@ export default function AttendancePanel() {
                     근태 관리
                 </h2>
                 <p className="pt-1 text-xs text-gray-400">
-                    {now ? formatKoreanTime(now) : ""}
+                    {currentTime ? formatKoreanTime(currentTime) : ""}
                 </p>
             </div>
 

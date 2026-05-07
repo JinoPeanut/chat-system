@@ -1,5 +1,6 @@
 "use client"
 
+import { useAuthStore } from "@/stores/useAuthStore";
 import { Chat } from "@/types/chat"
 import { HomeResponse } from "@/types/notice";
 import Link from "next/link";
@@ -7,18 +8,9 @@ import { useEffect, useState } from "react";
 
 export default function RecentChatsPanel() {
     const [chatRooms, setChatRooms] = useState<Chat[]>([]);
-    const myUserId = "user-1";
+    const authUser = useAuthStore((state) => state.user);
 
-    useEffect(() => {
-        const fetchHomeData = async () => {
-            const res = await fetch("/api/home");
-            const data: HomeResponse = await res.json();
-
-            setChatRooms(data.chatRooms);
-        }
-
-        fetchHomeData();
-    }, [])
+    const myUserId = authUser?.id;
 
     const recentChats = chatRooms
         // 내가 있는 대화방만 필터링
@@ -42,6 +34,17 @@ export default function RecentChatsPanel() {
         })
         .sort((a, b) => (a.lastTime < b.lastTime ? 1 : -1))
         .slice(0, 3);
+
+    useEffect(() => {
+        const fetchHomeData = async () => {
+            const res = await fetch("/api/home");
+            const data: HomeResponse = await res.json();
+
+            setChatRooms(data.chatRooms);
+        }
+
+        fetchHomeData();
+    }, [])
 
     return (
         <div className="border border-gray-200 rounded-md

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 const loginField = [
     { key: "email", label: "이메일", type: "email", placeholder: "이메일을 입력하세요." },
@@ -9,6 +10,7 @@ const loginField = [
 ] as const
 
 export default function LoginPage() {
+    const setUser = useAuthStore((state) => state.setUser);
     const router = useRouter();
 
     const [form, setForm] = useState({
@@ -24,35 +26,13 @@ export default function LoginPage() {
     const [submitError, setSubmitError] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const validateField = (key: keyof typeof form, value: string, nextForm: typeof form) => {
-        switch (key) {
-            case "email":
-                if (value === "") {
-                    return "이메일을 입력해 주세요."
-                }
-                return "";
-
-            case "password":
-                if (value === "") {
-                    return "비밀번호를 입력해 주세요."
-                }
-                return "";
-
-            default:
-                return "";
-        }
-    }
-
     const validateLoginForm = () => {
         const newErrors = {
             email: !form.email.trim() ? "이메일을 입력해주세요." : "",
             password: !form.password.trim() ? "비밀번호를 입력해주세요." : "",
         };
 
-        setError((prev) => ({
-            ...prev,
-            ...newErrors,
-        }));
+        setError(newErrors);
 
         return Object.values(newErrors).every((error) => error === "");
     };
@@ -64,14 +44,9 @@ export default function LoginPage() {
             [key]: value,
         }))
 
-        const errorMessage = validateField(key, value, {
-            ...form,
-            [key]: value,
-        })
-
         setError((prev) => ({
             ...prev,
-            [key]: errorMessage,
+            [key]: "",
         }))
     }
 
@@ -107,6 +82,7 @@ export default function LoginPage() {
                 return false;
             }
 
+            setUser(data.user);
             return true;
 
         } catch {

@@ -1,3 +1,4 @@
+import AuthInitializer from "@/components/auth/AuthInitializer";
 import SideBar from "@/components/chat/SideBar";
 
 export default function AppLayout({
@@ -7,6 +8,7 @@ export default function AppLayout({
 }) {
   return (
     <div className="flex h-full">
+      <AuthInitializer />
       <SideBar />
       <main className="flex-1">{children}</main>
     </div>

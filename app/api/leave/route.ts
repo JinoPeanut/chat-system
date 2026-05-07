@@ -1,7 +1,31 @@
 import { prisma } from "@/lib/prisma";
+import { calculateAnnualLeave } from "@/utils/leaveUtils";
 import { NextResponse } from "next/server";
 
 export async function GET() {
+    const users = await prisma.user.findMany({
+        select: {
+            id: true,
+            createdAt: true,
+        },
+    });
+
+    for (const user of users) {
+        const totalDays = calculateAnnualLeave(user.createdAt.toISOString());
+
+        await prisma.leaveBalance.upsert({
+            where: { userId: user.id },
+            update: { totalDays },
+            create: {
+                id: crypto.randomUUID(),
+                userId: user.id,
+                totalDays,
+                usedDays: 0,
+                useHours: 0,
+            },
+        });
+    }
+
     const leaveBalance = await prisma.leaveBalance.findMany();
     const leaveHistory = await prisma.leaveHistory.findMany();
 
@@ -29,7 +53,7 @@ export async function POST(request: Request) {
             status: body.status,
             reason: body.reason,
             createdAt: new Date(body.createdAt),
-        }
+        },
     });
 
     return NextResponse.json(leave, { status: 201 });

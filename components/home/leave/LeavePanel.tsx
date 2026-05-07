@@ -29,6 +29,7 @@ export default function LeavePanel() {
         handleChangeLeaveType,
         handleChangeReason,
         handleSubmitApply,
+        handleApproveLeave,
     } = useLeavePanel();
 
 

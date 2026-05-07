@@ -1,9 +1,11 @@
 import { getUsageByLeaveType } from "@/utils/leaveUtils";
 import { ApplyForm, LeaveBalance, LeaveHistory, LeaveResponse } from "@/types/leave";
 import { useEffect, useState } from "react";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 export default function useLeavePanel() {
-    const myUserId = "user-1";
+    const authUser = useAuthStore((state) => state.user);
+    const myUserId = authUser?.id;
     const myUserName = "홍길동";
 
     const [leaveBalance, setLeaveBalance] = useState<LeaveBalance[]>([]);
@@ -93,6 +95,21 @@ export default function useLeavePanel() {
         closeApplyModal();
     }
 
+    const handleApproveLeave = async (leaveId: string) => {
+        const res = await fetch("/api/leave/approve", {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ leaveId }),
+        });
+
+        if (!res.ok) return;
+
+        await fetchLeaveData();
+    };
+
+
     useEffect(() => {
         fetchLeaveData();
     }, []);
@@ -116,5 +133,6 @@ export default function useLeavePanel() {
         handleChangeLeaveType,
         handleChangeReason,
         handleSubmitApply,
+        handleApproveLeave,
     }
 }

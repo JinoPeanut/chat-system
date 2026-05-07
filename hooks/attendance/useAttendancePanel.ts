@@ -1,7 +1,9 @@
+import { useAuthStore } from "@/stores/useAuthStore";
 import { AttendanceType } from "@/types/attendance";
 import { useEffect, useState } from "react";
 
 export default function useAttendancePanel() {
+    const authUser = useAuthStore((state) => state.user);
 
     function formatKoreanTime(now: Date) {
         const parts = new Intl.DateTimeFormat("ko-KR", {
@@ -33,11 +35,11 @@ export default function useAttendancePanel() {
         return `${h}:${m}`;
     }
 
-    const [now, setNow] = useState<Date | null>(null);
+    const [currentTime, setCurrentTime] = useState<Date | null>(null);
     const [attendance, setAttendance] = useState<AttendanceType[]>([]);
 
     const todayKey = new Date().toISOString().slice(0, 10);
-    const myUserId = "user-1";
+    const myUserId = authUser?.id;
 
     const fetchAttendance = async () => {
         const res = await fetch("/api/attendance");
@@ -59,7 +61,7 @@ export default function useAttendancePanel() {
     const workPercent = Math.min(100, (workMinutesText / workTime) * 100);
 
     const handleCheckIn = async () => {
-        if (todayAttendance?.checkInAt) return;
+        if (todayAttendance?.checkInAt || !myUserId) return;
 
         const now = new Date();
         const checkInAt = now.getHours() * 60 + now.getMinutes();
@@ -82,7 +84,7 @@ export default function useAttendancePanel() {
     }
 
     const handleCheckOut = async () => {
-        if (!todayAttendance?.checkInAt) return;
+        if (!todayAttendance?.checkInAt || !myUserId) return;
 
         const now = new Date();
         const checkOutAt = now.getHours() * 60 + now.getMinutes();
@@ -111,8 +113,8 @@ export default function useAttendancePanel() {
     return {
         formatKoreanTime,
         formatMinutes,
-        now,
-        setNow,
+        currentTime,
+        setCurrentTime,
         todayAttendance,
         checkInText,
         checkOutText,
