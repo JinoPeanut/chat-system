@@ -1,7 +1,7 @@
 import AttendancePanel from "@/components/home/attendance/AttendancePanel";
 import LeavePanel from "@/components/home/leave/LeavePanel";
 import NoticePanel from "@/components/home/notice/NoticePanel";
-import ProfileCard from "@/components/home/ProfileCard";
+import ProfileCard from "@/components/home/profile/ProfileCard";
 import RecentChatsPanel from "@/components/home/RecentChatsPanel";
 import TodaySchedulePanel from "@/components/home/TodaySchedulePanel";
 

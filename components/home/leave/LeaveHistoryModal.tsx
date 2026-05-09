@@ -4,7 +4,7 @@ type LeaveHistoryModalProps = {
     isOpen: boolean,
     closeModal: () => void,
     myLeaveHistory: LeaveHistory[],
-    myUserName: string,
+    myUserName?: string,
 }
 
 export default function LeaveHistoryModal(

@@ -65,6 +65,7 @@ export async function POST(request: Request) {
                 department: updatedUser.department,
                 position: updatedUser.position,
                 status: updatedUser.status,
+                profilePic: updatedUser.profilePic,
                 createdAt: updatedUser.createdAt,
                 companyId: updatedUser.companyId,
             },

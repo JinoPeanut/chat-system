@@ -19,6 +19,7 @@ export async function GET() {
             department: true,
             position: true,
             status: true,
+            profilePic: true,
             createdAt: true,
             companyId: true,
         }

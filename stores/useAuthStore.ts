@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-type AuthUser = {
+export type AuthUser = {
     id: string,
     name: string,
     email: string,
@@ -9,6 +9,7 @@ type AuthUser = {
     status: "online" | "offline" | "AFK",
     createdAt: string,
     companyId: string,
+    profilePic: string | null,
 }
 
 type AuthStore = {

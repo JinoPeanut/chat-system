@@ -6,7 +6,7 @@ import { useAuthStore } from "@/stores/useAuthStore";
 export default function useLeavePanel() {
     const authUser = useAuthStore((state) => state.user);
     const myUserId = authUser?.id;
-    const myUserName = "홍길동";
+    const myUserName = authUser?.name;
 
     const [leaveBalance, setLeaveBalance] = useState<LeaveBalance[]>([]);
     const [leaveHistory, setLeaveHistory] = useState<LeaveHistory[]>([]);

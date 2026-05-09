@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { ChevronRight, Settings, MessageCircle, Home } from "lucide-react"
+import { ChevronRight, Settings, MessageCircle, Home, User } from "lucide-react"
 import { Chat, UserStatus } from "@/types/chat";
 import { useRouter } from "next/navigation"
 import { Department } from "@/types/department";
@@ -108,9 +108,19 @@ export default function SideBar() {
                 <div className="flex p-4 justify-between items-center">
                     {/* 사진 */}
                     <div className="flex">
-                        <div className={`rounded-full bg-gray-400 w-[50px] h-[50px] ring-2 ${authUser && getStatusRingColor(authUser?.status)}`}>
-                            사진
-                        </div>
+                        {authUser?.profilePic ?
+                            (<img
+                                src={authUser.profilePic}
+                                alt="프로필 사진"
+                                className={`w-[50px] h-[50px] bg-gray-400 rounded-full
+                        top-[-40px] ring-3 ${authUser ? getStatusRingColor(authUser.status) : "ring-gray-400"}`}
+                            />) : (
+                                <div className="flex h-[50px] w-[50px] items-center justify-center rounded-full">
+                                    <User className={`w-[50px] h-[50px] bg-gray-100 rounded-full text-slate-400
+                                    ring-3 ${authUser ? getStatusRingColor(authUser.status) : "ring-gray-400"}`} />
+                                </div>
+                            )}
+
                         <div className="justify-between">
                             <div className="pl-2">
                                 <span>{authUser?.name}</span>
