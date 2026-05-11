@@ -5,22 +5,20 @@ import { User2 } from "lucide-react"
 type MessageItemProps = {
     message: Message
     isMine: boolean
-    otherUser?: User
-    myUser: User,
 }
 
-export default function MessageItem({ message, isMine, otherUser, myUser }: MessageItemProps) {
+export default function MessageItem({ message, isMine }: MessageItemProps) {
 
-    const myUserProfile = isMine ? myUser : otherUser;
+    const sender = message.sender;
 
     return (
         <div>
             <div className="flex pl-4 pt-4 p-2 gap-1">
                 <div className="rounded-full bg-gray-400 w-[50px] h-[50px]">
-                    {myUserProfile?.profilePic
+                    {sender?.profilePic
                         ? (<img
-                            src={myUserProfile.profilePic}
-                            alt={`${myUserProfile.name}의 프로필`}
+                            src={sender.profilePic}
+                            alt={`${sender.name}의 프로필`}
                             className="w-full h-full rounded-full object-cover"
                         />)
                         : (<div className="flex h-[50px] w-[50px] items-center justify-center rounded-full">
@@ -32,7 +30,7 @@ export default function MessageItem({ message, isMine, otherUser, myUser }: Mess
                 </div>
                 <div className="flex flex-col pl-2">
                     <div className="flex gap-2 items-end">
-                        <p>{isMine ? myUser.name : otherUser?.name}</p>
+                        <p>{sender?.name}</p>
                         <p className="text-sm text-gray-700/50">
                             {new Date(message.timeAt).toLocaleTimeString("ko-KR", {
                                 year: "numeric",

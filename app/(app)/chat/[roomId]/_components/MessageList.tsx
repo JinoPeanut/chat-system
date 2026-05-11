@@ -3,14 +3,13 @@ import MessageItem from "./MessageItem";
 
 type MessageListProps = {
     messages: Message[];
-    myUser?: User;
-    otherUser?: User;
+    myUserId: string | null;
     room?: Chat | null;
 }
 
-export default function MessageList({ messages, myUser, otherUser, room }: MessageListProps) {
+export default function MessageList({ messages, myUserId, room }: MessageListProps) {
 
-    if (!room || !myUser) {
+    if (!room) {
         return (
             <div>로딩중...</div>
         )
@@ -22,9 +21,7 @@ export default function MessageList({ messages, myUser, otherUser, room }: Messa
                     : messages.map((msg) => <MessageItem
                         key={msg.id}
                         message={msg}
-                        isMine={msg.senderId === myUser?.id}
-                        otherUser={otherUser}
-                        myUser={myUser}
+                        isMine={msg.senderId === myUserId}
                     />)
                 }
             </div>

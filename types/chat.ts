@@ -19,6 +19,8 @@ export type Message = {
     chatRoomId: string, // 방 아이디
     content: string, // 내용
     timeAt: string, // 시간
+
+    sender?: User,
 }
 
 export type Chat = {

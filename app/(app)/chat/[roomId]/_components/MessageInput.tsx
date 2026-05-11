@@ -3,16 +3,15 @@ import { useState } from "react";
 
 type MessageInputProps = {
     roomId: string,
-    myUserId: string | null,
     onSend: () => Promise<void>,
 }
 
-export default function MessageInput({ roomId, myUserId, onSend }: MessageInputProps) {
+export default function MessageInput({ roomId, onSend }: MessageInputProps) {
 
     const [content, setContent] = useState("");
 
     const handleSend = async () => {
-        if (!content.trim() || !myUserId) return;
+        if (!content.trim()) return;
 
         const res = await fetch("/api/messages", {
             method: "POST",

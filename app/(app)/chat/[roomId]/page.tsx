@@ -29,20 +29,24 @@ export default function ChatPage({ params }: { params: Promise<{ roomId: string 
         setSubmitError("");
         setIsSubmitting(true);
 
-        const res = await fetch(`/api/chatrooms/${roomId}`);
+        try {
+            const res = await fetch(`/api/chatrooms/${roomId}`);
 
-        if (!res.ok) {
-            if (res.status === 401) {
-                setSubmitError("로그인이 필요합니다.");
-            } else if (res.status === 404) {
-                setSubmitError("접근할 수 없는 채팅방입니다.");
+            if (!res.ok) {
+                if (res.status === 401) {
+                    setSubmitError("로그인이 필요합니다.");
+                } else if (res.status === 404) {
+                    setSubmitError("접근할 수 없는 채팅방입니다.");
+                }
+                return
             }
-            return
+
+            const data = await res.json();
+
+            setChatRoom(data);
+        } finally {
+            setIsSubmitting(false);
         }
-
-        const data = await res.json();
-
-        setChatRoom(data);
     };
 
     useEffect(() => {
@@ -93,8 +97,7 @@ export default function ChatPage({ params }: { params: Promise<{ roomId: string 
             <div className="flex-1 overflow-auto">
                 <MessageList
                     messages={messages}
-                    myUser={myUser}
-                    otherUser={otherUser}
+                    myUserId={myUserId}
                     room={chatRoom}
                 />
             </div>
@@ -103,7 +106,6 @@ export default function ChatPage({ params }: { params: Promise<{ roomId: string 
             <div className="shrink-0">
                 <MessageInput
                     roomId={roomId}
-                    myUserId={myUserId}
                     onSend={fetchChatRoom}
                 />
             </div>
