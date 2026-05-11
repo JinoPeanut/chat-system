@@ -1,7 +1,7 @@
 "use client"
 
 import { ScheduleDetail, ScheduleHome } from "@/types/schedule";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, MessageSquareMore, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const scheduleColors = [
@@ -26,8 +26,6 @@ const formatDateTimeLocal = (dateString: string) => {
 }
 
 export default function TodaySchedulePanel() {
-    const myUserId = "user-1";
-
     const [scheduleHome, setScheduleHome] = useState<ScheduleHome[]>([]);
     const [scheduleDetail, setScheduleDetail] = useState<ScheduleDetail[]>([]);
 
@@ -71,7 +69,6 @@ export default function TodaySchedulePanel() {
 
     // 홈화면에만 표시할것들
     const myScheduleHome = scheduleHome
-        .filter((u) => u.userId === myUserId)
         .filter((u) => new Date(u.startAt).toDateString() === now.toDateString())
         .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime())
         .slice(0, 3);
@@ -84,7 +81,6 @@ export default function TodaySchedulePanel() {
             const d = new Date(s.startAt);
 
             return (
-                s.userId === myUserId &&
                 d.getFullYear() === selectedDay.year &&
                 d.getMonth() === selectedDay.month &&
                 d.getDate() === selectedDay.day
@@ -93,7 +89,6 @@ export default function TodaySchedulePanel() {
         .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
 
     const totalSchedule = scheduleHome
-        .filter((u) => u.userId === myUserId)
         .filter((u) => new Date(u.startAt).toDateString() === now.toDateString())
         .length;
 
@@ -104,7 +99,6 @@ export default function TodaySchedulePanel() {
             method: "POST",
             headers: { "Content-type": "application/json" },
             body: JSON.stringify({
-                userId: myUserId,
                 title: form.title,
                 titleMemo: form.titleMemo,
                 content: form.content,
@@ -136,7 +130,6 @@ export default function TodaySchedulePanel() {
             headers: { "Content-type": "application/json" },
             body: JSON.stringify({
                 id: selectedSchedule?.id,
-                userId: myUserId,
                 title: form.title,
                 titleMemo: form.titleMemo,
                 content: form.content,
@@ -160,7 +153,6 @@ export default function TodaySchedulePanel() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 id: selectedSchedule?.id,
-                userId: myUserId,
             }),
         });
 
@@ -223,10 +215,10 @@ export default function TodaySchedulePanel() {
                 <div key={schedule.id} className={`${scheduleColors[index % scheduleColors.length]} rounded-md m-2 p-2 flex gap-3`}>
                     <div className={`${barColors[index % barColors.length]} w-[0.2rem] h-[2.5rem]`}>{/* 세로줄 */}</div>
                     <div className="flex flex-col justify-between">
-                        <div className="text-sm font-semibold text-gray-600 flex items-center gap-1">
+                        <div className="text-sm font-semibold text-gray-600 flex items-center gap-2">
                             {schedule.title}
                             {schedule.titleMemo && (<p className="w-[3px] h-[3px] rounded-full bg-black"></p>)}
-                            {schedule.titleMemo}
+                            {schedule.titleMemo && (<MessageSquareMore size={14} />)}
                         </div>
                         <div className="flex gap-1 text-xs font-semibold text-gray-400 group-hover:text-gray-100">
                             {new Date(schedule.startAt).toLocaleTimeString("ko-KR", {
@@ -307,7 +299,6 @@ export default function TodaySchedulePanel() {
                                     const daySchedules = scheduleDetail.filter((s) => {
                                         const d = new Date(s.startAt)
                                         return (
-                                            s.userId === myUserId &&
                                             d.getFullYear() === currentYear &&
                                             d.getMonth() === currentMonth &&
                                             d.getDate() === day
@@ -391,13 +382,18 @@ export default function TodaySchedulePanel() {
                                                         setMode("edit")
                                                     }}
                                                     className={`${scheduleColors[index % scheduleColors.length]} rounded-md m-2 p-2 flex gap-3 cursor-pointer`}>
-                                                    <div className={`${barColors[index % barColors.length]} w-[0.2rem] h-[3.7rem]`}></div>
+                                                    <div className={`${barColors[index % barColors.length]} w-[0.2rem] self-stretch`}></div>
                                                     <div className="flex flex-col justify-between">
                                                         <div className="text-sm font-semibold text-gray-600 flex items-center gap-1">
                                                             {schedule.title}
-                                                            {schedule.titleMemo && (<p className="w-[3px] h-[3px] rounded-full bg-black"></p>)}
-                                                            {schedule.titleMemo}
                                                         </div>
+
+                                                        {schedule.titleMemo &&
+                                                            (<div className="truncate text-xs font-semibold text-gray-600">
+                                                                {schedule.titleMemo}
+                                                            </div>)
+                                                        }
+
                                                         <div className="text-sm font-semibold flex items-center gap-1">
                                                             {schedule.content ?? "-"}
                                                         </div>
@@ -503,7 +499,7 @@ export default function TodaySchedulePanel() {
                     </div>
                 </div>)
             }
-        </div>
+        </div >
 
     )
 }

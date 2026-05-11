@@ -1,18 +1,11 @@
 "use client"
 
-import { CircleUserRound, Settings, User } from "lucide-react";
+import { Settings, User } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Profile } from "@/types/profile";
+import { Profile, ProfileForm } from "@/types/profile";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { getStatusRingColor } from "../../chat/SideBar";
 import ProfileSetting from "./ProfileSetting";
-
-type ProfileForm = {
-    statusMsg: string,
-    statusWork: "office" | "house",
-    tel: string,
-    profilePic: string | null,
-}
 
 const getStatusWork = (work: string) => {
     if (work === "office") return "사무실";

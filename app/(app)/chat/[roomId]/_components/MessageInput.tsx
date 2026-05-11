@@ -3,7 +3,7 @@ import { useState } from "react";
 
 type MessageInputProps = {
     roomId: string,
-    myUserId: string,
+    myUserId: string | null,
     onSend: () => Promise<void>,
 }
 
@@ -12,13 +12,12 @@ export default function MessageInput({ roomId, myUserId, onSend }: MessageInputP
     const [content, setContent] = useState("");
 
     const handleSend = async () => {
-        if (!content.trim()) return;
+        if (!content.trim() || !myUserId) return;
 
-        const res = await fetch("api/messages", {
+        const res = await fetch("/api/messages", {
             method: "POST",
             headers: { "Content-type": "application/json", },
             body: JSON.stringify({
-                senderId: myUserId,
                 chatRoomId: roomId,
                 content,
             })

@@ -108,18 +108,20 @@ export default function SideBar() {
                 <div className="flex p-4 justify-between items-center">
                     {/* 사진 */}
                     <div className="flex">
-                        {authUser?.profilePic ?
-                            (<img
+                        {authUser?.profilePic
+                            ? (<img
                                 src={authUser.profilePic}
                                 alt="프로필 사진"
                                 className={`w-[50px] h-[50px] bg-gray-400 rounded-full
-                        top-[-40px] ring-3 ${authUser ? getStatusRingColor(authUser.status) : "ring-gray-400"}`}
-                            />) : (
+                                    top-[-40px] ring-3 ${authUser ? getStatusRingColor(authUser.status) : "ring-gray-400"}`}
+                            />)
+                            : (
                                 <div className="flex h-[50px] w-[50px] items-center justify-center rounded-full">
                                     <User className={`w-[50px] h-[50px] bg-gray-100 rounded-full text-slate-400
                                     ring-3 ${authUser ? getStatusRingColor(authUser.status) : "ring-gray-400"}`} />
                                 </div>
-                            )}
+                            )
+                        }
 
                         <div className="justify-between">
                             <div className="pl-2">

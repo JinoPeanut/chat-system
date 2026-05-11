@@ -3,7 +3,7 @@ import LeavePanel from "@/components/home/leave/LeavePanel";
 import NoticePanel from "@/components/home/notice/NoticePanel";
 import ProfileCard from "@/components/home/profile/ProfileCard";
 import RecentChatsPanel from "@/components/home/RecentChatsPanel";
-import TodaySchedulePanel from "@/components/home/TodaySchedulePanel";
+import TodaySchedulePanel from "@/components/home/schedule/TodaySchedulePanel";
 
 export default function HomePage() {
   return (

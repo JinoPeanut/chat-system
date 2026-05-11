@@ -4,11 +4,11 @@ import MessageItem from "./MessageItem";
 type MessageListProps = {
     messages: Message[];
     myUser?: User;
-    user?: User;
-    room?: Chat | undefined;
+    otherUser?: User;
+    room?: Chat | null;
 }
 
-export default function MessageList({ messages, myUser, user, room }: MessageListProps) {
+export default function MessageList({ messages, myUser, otherUser, room }: MessageListProps) {
 
     if (!room || !myUser) {
         return (
@@ -23,7 +23,7 @@ export default function MessageList({ messages, myUser, user, room }: MessageLis
                         key={msg.id}
                         message={msg}
                         isMine={msg.senderId === myUser?.id}
-                        user={user}
+                        otherUser={otherUser}
                         myUser={myUser}
                     />)
                 }
