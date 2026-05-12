@@ -10,7 +10,7 @@ export default function AppLayout({
     <div className="flex h-full">
       <AuthInitializer />
       <SideBar />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 bg-[#F5F2FA]">{children}</main>
     </div>
   );
 }

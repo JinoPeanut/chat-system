@@ -1,13 +1,13 @@
 "use client"
 
-import { use, useEffect, useState } from "react"
+import { use, useEffect, useRef, useState } from "react"
 import { Chat } from "@/types/chat"
 import { getStatusColor } from "@/components/chat/SideBar";
 import MessageList from "./_components/MessageList";
 import MessageInput from "./_components/MessageInput";
-import { HomeResponse } from "@/types/notice";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { User2 } from "lucide-react";
+import { socket } from "@/lib/socket";
 
 function getUserStatus(status: string) {
     if (status === "online") return "온라인";
@@ -23,6 +23,15 @@ export default function ChatPage({ params }: { params: Promise<{ roomId: string 
     const [chatRoom, setChatRoom] = useState<Chat | null>(null);
     const [submitError, setSubmitError] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const bottomRef = useRef<HTMLDivElement | null>(null);
+
+    const myUserId = authUser?.id ?? null;
+
+    const otherUser = chatRoom?.members?.find((member) => member.id !== myUserId);
+    const messages = chatRoom?.messages ?? [];
+
+    const firstMessage = messages[0];
 
     const fetchChatRoom = async () => {
         if (isSubmitting) return;
@@ -53,15 +62,50 @@ export default function ChatPage({ params }: { params: Promise<{ roomId: string 
         fetchChatRoom();
     }, [])
 
-    const myUserId = authUser?.id ?? null;
+    useEffect(() => {
+        socket.connect();
 
-    const members = chatRoom?.members ?? [];
-    const myUser = members.find((member) => member.id === myUserId);
-    const otherUser = chatRoom?.members?.find((member) => member.id !== myUserId);
-    const messages = chatRoom?.messages ?? [];
+        const handleConnect = () => {
+            socket.emit("join-room", roomId);
+        }
+
+        const handleSocketError = (message: string) => {
+            setSubmitError(message);
+        }
+
+        if (socket.connected) handleConnect();
+
+        socket.on("connect", handleConnect);
+
+        socket.on("error-message", handleSocketError);
+
+        socket.on("new-message", (message) => {
+            setChatRoom((prev) => {
+                if (!prev) return prev;
+
+                return {
+                    ...prev,
+                    messages: [...(prev.messages ?? []), message],
+                }
+            })
+        })
+
+        return () => {
+            socket.off("connect", handleConnect);
+            socket.off("error-message", handleSocketError);
+            socket.off("new-message");
+            socket.disconnect();
+        }
+    }, [roomId])
+
+    useEffect(() => {
+        bottomRef.current?.scrollIntoView({
+            behavior: "smooth",
+        });
+    }, [messages.length])
 
     return (
-        <div className="bg-gray-200 min-h-screen flex flex-col">
+        <div className="min-h-0 h-[100dvh] flex flex-col bg-[#F5F2FA]">
             {/* 상대방 프로필 표시 */}
             <div className="flex p-4">
                 <div className="rounded-full bg-gray-400 w-[50px] h-[50px]  ">
@@ -88,25 +132,37 @@ export default function ChatPage({ params }: { params: Promise<{ roomId: string 
             </div>
 
             {/* 최상단 경계선 */}
-            <div className="border-b border-gray-400 w-[100%]"></div>
+            <div className="border-b-[2px] border-[#DDD6E8] w-[100%]"></div>
 
             {/* 고정메세지 */}
             {headerMessage && "상단 메세지 입니다"}
 
             {/* 채팅메시지 영역 */}
-            <div className="flex-1 overflow-auto">
+            <div className="min-h-0 flex-1 overflow-y-auto">
                 <MessageList
                     messages={messages}
                     myUserId={myUserId}
                     room={chatRoom}
                 />
+                <div ref={bottomRef} />
+            </div>
+
+            {/* 오류메세지 */}
+            <div className="shrink-0">
+                {submitError
+                    && (
+                        <div className="mx-4 my-2 rounded-md bg-red-100 px-3 py-2 text-sm text-red-600">
+                            {submitError}
+                        </div>
+                    )
+                }
             </div>
 
             {/* 채팅입력 영역 */}
             <div className="shrink-0">
                 <MessageInput
                     roomId={roomId}
-                    onSend={fetchChatRoom}
+                    onError={setSubmitError}
                 />
             </div>
         </div>

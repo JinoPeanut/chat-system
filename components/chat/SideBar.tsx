@@ -86,24 +86,26 @@ export default function SideBar() {
     }, [])
 
     return (
-        <div className="flex w-1/5 min-h-screen bg-purple-300 rounded-l-lg">
-            {/* 왼쪽 프로필칸 */}
-            <div className="p-4 flex">
-                {/* 메인홈 버튼 */}
-                <button
-                    onClick={() => router.push("/home")}
-                    className="
+        <div className="flex min-h-screen w-1/5">
+            {/* 사이드바 왼쪽 - 아이콘 버튼 */}
+            <div className="flex flex-col bg-[#D9B8F3] rounded-lg">
+                {/* 왼쪽 프로필칸 */}
+                <div className="p-4 flex">
+                    {/* 메인홈 버튼 */}
+                    <button
+                        onClick={() => router.push("/home")}
+                        className="
                         rounded-lg border-gray-300 w-[50px] h-[50px] cursor-pointer
                         inline-flex justify-center items-center hover:bg-gray-400 mr-2
                 ">
-                    <Home />
-                </button>
+                        <Home />
+                    </button>
+                </div>
             </div>
 
-            <div className="border-r border-gray-400"></div>
 
-            {/* 오른쪽 채팅목록 */}
-            <div className="w-full flex flex-col">
+            {/* 사이드바 오른쪽 - 채팅목록 */}
+            <div className="w-full flex flex-col rounded-l-lg bg-[#F5F2FA] border-r-[2px] border-[#DDD6E8]">
                 {/* 내 프로필 */}
                 <div className="flex p-4 justify-between items-center">
                     {/* 사진 */}
@@ -139,7 +141,7 @@ export default function SideBar() {
                 </div>
 
                 {/* 경계선 */}
-                <div className="border-b border-gray-400 w-[100%]"></div>
+                <div className="border-[0.5px] border-[#DDD6E8] w-[100%]"></div>
 
                 {/* 부서 목록 */}
                 <div className="p-4">

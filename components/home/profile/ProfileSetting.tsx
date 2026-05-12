@@ -130,7 +130,7 @@ export default function ProfileSetting({
                                     : <>
                                         <div className="relative flex items-center">
                                             <p className="w-full border border-gray-400 bg-gray-400 rounded-lg py-2 pl-2 pr-10">
-                                                {form.statusMsg}
+                                                {form.statusMsg ? form.statusMsg : "상태메세지를 입력해 주세요."}
                                             </p>
                                             <button
                                                 onClick={() => setSaveMsg("save")}
@@ -170,7 +170,7 @@ export default function ProfileSetting({
                                     : <>
                                         <div className="relative flex items-center">
                                             <p className="w-full border border-gray-400 bg-gray-400 rounded-lg py-2 pl-2 pr-10">
-                                                {form.tel}
+                                                {form.tel ? form.tel : "휴대폰 번호를 입력하세요."}
                                             </p>
                                             <button
                                                 onClick={() => setSaveTel("save")}
