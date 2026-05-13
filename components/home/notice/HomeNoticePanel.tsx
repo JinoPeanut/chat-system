@@ -4,7 +4,7 @@ import { User } from "@/types/chat"
 import { HomeResponse, Notice, NOTICE_TABS, NoticeScope } from "@/types/notice";
 import { useEffect, useState } from "react";
 
-const getCategoryName = (category: string) => {
+export const getCategoryName = (category: string) => {
     if (category === "notice") return "공지사항"
     if (category === "event") return "이벤트"
     if (category === "update") return "업데이트"

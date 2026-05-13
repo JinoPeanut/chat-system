@@ -1,6 +1,6 @@
 import AttendancePanel from "@/components/home/attendance/AttendancePanel";
 import LeavePanel from "@/components/home/leave/LeavePanel";
-import NoticePanel from "@/components/home/notice/NoticePanel";
+import NoticePanel from "@/components/home/notice/HomeNoticePanel";
 import ProfileCard from "@/components/home/profile/ProfileCard";
 import RecentChatsPanel from "@/components/home/RecentChatsPanel";
 import TodaySchedulePanel from "@/components/home/schedule/TodaySchedulePanel";
@@ -9,7 +9,7 @@ export default function HomePage() {
   return (
     <div>
       {/* 최상단 텍스트 */}
-      <div className="flex items-end gap-2 px-2 pt-2">
+      <div className="flex items-end gap-2 px-6 pt-2">
         <p className="font-bold text-sm">
           메인 홈
         </p>

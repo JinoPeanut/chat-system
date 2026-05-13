@@ -2,12 +2,15 @@
 
 import { use, useEffect, useRef, useState } from "react"
 import { Chat } from "@/types/chat"
-import { getStatusColor } from "@/components/chat/SideBar";
+import { getStatusColor, getStatusRingColor, getStatusText } from "@/components/chat/SideBar";
 import MessageList from "./_components/MessageList";
 import MessageInput from "./_components/MessageInput";
 import { useAuthStore } from "@/stores/useAuthStore";
-import { User2 } from "lucide-react";
+import { ChevronRight, MessageCircle, Settings, User, User2 } from "lucide-react";
 import { socket } from "@/lib/socket";
+import { useRouter } from "next/navigation";
+import { Department } from "@/types/department";
+import { HomeResponse } from "@/types/notice";
 
 function getUserStatus(status: string) {
     if (status === "online") return "온라인";
@@ -18,8 +21,12 @@ function getUserStatus(status: string) {
 export default function ChatPage({ params }: { params: Promise<{ roomId: string }> }) {
     const { roomId } = use(params);
 
+    const router = useRouter();
     const [headerMessage, setHeaderMessage] = useState(false);
     const authUser = useAuthStore((state) => state.user);
+    const clearUser = useAuthStore((state) => state.clearUser);
+
+    const [departments, setDepartments] = useState<Department[]>([]);
     const [chatRoom, setChatRoom] = useState<Chat | null>(null);
     const [submitError, setSubmitError] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -105,66 +112,66 @@ export default function ChatPage({ params }: { params: Promise<{ roomId: string 
     }, [messages.length])
 
     return (
-        <div className="min-h-0 h-[100dvh] flex flex-col bg-[#F5F2FA]">
-            {/* 상대방 프로필 표시 */}
-            <div className="flex p-4">
-                <div className="rounded-full bg-gray-400 w-[50px] h-[50px]  ">
-                    {otherUser?.profilePic
-                        ? (<img
-                            src={otherUser.profilePic}
-                            alt={`${otherUser.name}의 프로필`}
-                            className="w-full h-full rounded-full object-cover"
-                        />)
-                        : (<div className="flex h-[50px] w-[50px] items-center justify-center rounded-full">
-                            <User2 className={`w-[50px] h-[50px] bg-gray-100 rounded-full text-slate-400
+            <div className="min-h-0 h-full flex flex-col bg-[#F5F2FA]">
+                {/* 상대방 프로필 표시 */}
+                <div className="flex p-4">
+                    <div className="rounded-full bg-gray-400 w-[50px] h-[50px]  ">
+                        {otherUser?.profilePic
+                            ? (<img
+                                src={otherUser.profilePic}
+                                alt={`${otherUser.name}의 프로필`}
+                                className="w-full h-full rounded-full object-cover"
+                            />)
+                            : (<div className="flex h-[50px] w-[50px] items-center justify-center rounded-full">
+                                <User2 className={`w-[50px] h-[50px] bg-gray-100 rounded-full text-slate-400
                                     ring-3`} />
+                            </div>
+                            )
+                        }
+                    </div>
+                    <div className="flex flex-col pl-2">
+                        <span>{otherUser?.name}</span>
+                        <div className="flex items-center gap-1">
+                            <div className={`rounded-full w-[8px] h-[8px] ${otherUser && getStatusColor(otherUser.status)}`}></div>
+                            <span>{otherUser && getUserStatus(otherUser.status)}</span>
                         </div>
+                    </div>
+                </div>
+
+                {/* 최상단 경계선 */}
+                <div className="border-b-[2px] border-[#DDD6E8] w-[100%]"></div>
+
+                {/* 고정메세지 */}
+                {headerMessage && "상단 메세지 입니다"}
+
+                {/* 채팅메시지 영역 */}
+                <div className="min-h-0 flex-1 overflow-y-auto">
+                    <MessageList
+                        messages={messages}
+                        myUserId={myUserId}
+                        room={chatRoom}
+                    />
+                    <div ref={bottomRef} />
+                </div>
+
+                {/* 오류메세지 */}
+                <div className="shrink-0">
+                    {submitError
+                        && (
+                            <div className="mx-4 my-2 rounded-md bg-red-100 px-3 py-2 text-sm text-red-600">
+                                {submitError}
+                            </div>
                         )
                     }
                 </div>
-                <div className="flex flex-col pl-2">
-                    <span>{otherUser?.name}</span>
-                    <div className="flex items-center gap-1">
-                        <div className={`rounded-full w-[8px] h-[8px] ${otherUser && getStatusColor(otherUser.status)}`}></div>
-                        <span>{otherUser && getUserStatus(otherUser.status)}</span>
-                    </div>
+
+                {/* 채팅입력 영역 */}
+                <div className="shrink-0">
+                    <MessageInput
+                        roomId={roomId}
+                        onError={setSubmitError}
+                    />
                 </div>
             </div>
-
-            {/* 최상단 경계선 */}
-            <div className="border-b-[2px] border-[#DDD6E8] w-[100%]"></div>
-
-            {/* 고정메세지 */}
-            {headerMessage && "상단 메세지 입니다"}
-
-            {/* 채팅메시지 영역 */}
-            <div className="min-h-0 flex-1 overflow-y-auto">
-                <MessageList
-                    messages={messages}
-                    myUserId={myUserId}
-                    room={chatRoom}
-                />
-                <div ref={bottomRef} />
-            </div>
-
-            {/* 오류메세지 */}
-            <div className="shrink-0">
-                {submitError
-                    && (
-                        <div className="mx-4 my-2 rounded-md bg-red-100 px-3 py-2 text-sm text-red-600">
-                            {submitError}
-                        </div>
-                    )
-                }
-            </div>
-
-            {/* 채팅입력 영역 */}
-            <div className="shrink-0">
-                <MessageInput
-                    roomId={roomId}
-                    onError={setSubmitError}
-                />
-            </div>
-        </div>
     )
 }

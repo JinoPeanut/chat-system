@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { ChevronRight, Settings, MessageCircle, Home, User } from "lucide-react"
+import { Home, MessageCircleMore, Newspaper } from "lucide-react"
 import { Chat, UserStatus } from "@/types/chat";
 import { useRouter } from "next/navigation"
 import { Department } from "@/types/department";
@@ -18,7 +18,6 @@ export function getStatusRingColor(status: UserStatus) {
             return "ring-yellow-400";
     }
 }
-
 
 export function getStatusColor(status: UserStatus) {
     switch (status) {
@@ -39,175 +38,41 @@ export function getStatusText(status: UserStatus) {
 export default function SideBar() {
 
     const router = useRouter();
-    const [openDepts, setOpenDepts] = useState<string[]>([]);
-    const [departments, setDepartments] = useState<Department[]>([]);
-    const [chatRooms, setChatRooms] = useState<Chat[]>([]);
-    const authUser = useAuthStore((state) => state.user);
-    const clearUser = useAuthStore((state) => state.clearUser);
-
-    const myUserId = authUser?.id;
-    const myDepartment = authUser?.department;
-
-    const logout = async () => {
-        await fetch("/api/auth/logout", {
-            method: "POST"
-        });
-        clearUser();
-        router.push("/");
-    };
-
-    const handleOpenChat = async (targetUserId: string) => {
-        const res = await fetch("/api/chatrooms/personal", {
-            method: "POST",
-            headers: { "Content-type": "application/json" },
-            body: JSON.stringify({ targetUserId }),
-        });
-
-        if (!res.ok) return;
-
-        const data = await res.json();
-
-        router.push(`/chat/${data.room.id}`);
-    }
-
-    useEffect(() => {
-        const fetchData = async () => {
-            const deptRes = await fetch("/api/departments");
-            const deptData = await deptRes.json();
-            setDepartments(deptData);
-
-            // 채팅창 정보가 필요해서 추가
-            const homeRes = await fetch("/api/home");
-            const homeData: HomeResponse = await homeRes.json();
-            setChatRooms(homeData.chatRooms);
-        };
-
-        fetchData();
-    }, [])
 
     return (
-        <div className="flex min-h-screen w-1/5">
+        <div className="flex min-h-screen">
             {/* 사이드바 왼쪽 - 아이콘 버튼 */}
             <div className="flex flex-col bg-[#D9B8F3] rounded-lg">
                 {/* 왼쪽 프로필칸 */}
-                <div className="p-4 flex">
+                <div className="p-4 flex flex-col gap-5">
                     {/* 메인홈 버튼 */}
                     <button
                         onClick={() => router.push("/home")}
                         className="
                         rounded-lg border-gray-300 w-[50px] h-[50px] cursor-pointer
-                        inline-flex justify-center items-center hover:bg-gray-400 mr-2
-                ">
+                        inline-flex justify-center items-center hover:bg-gray-400 mr-2 mb-10
+                    ">
                         <Home />
                     </button>
-                </div>
-            </div>
 
-
-            {/* 사이드바 오른쪽 - 채팅목록 */}
-            <div className="w-full flex flex-col rounded-l-lg bg-[#F5F2FA] border-r-[2px] border-[#DDD6E8]">
-                {/* 내 프로필 */}
-                <div className="flex p-4 justify-between items-center">
-                    {/* 사진 */}
-                    <div className="flex">
-                        {authUser?.profilePic
-                            ? (<img
-                                src={authUser.profilePic}
-                                alt="프로필 사진"
-                                className={`w-[50px] h-[50px] bg-gray-400 rounded-full
-                                    top-[-40px] ring-3 ${authUser ? getStatusRingColor(authUser.status) : "ring-gray-400"}`}
-                            />)
-                            : (
-                                <div className="flex h-[50px] w-[50px] items-center justify-center rounded-full">
-                                    <User className={`w-[50px] h-[50px] bg-gray-100 rounded-full text-slate-400
-                                    ring-3 ${authUser ? getStatusRingColor(authUser.status) : "ring-gray-400"}`} />
-                                </div>
-                            )
-                        }
-
-                        <div className="justify-between">
-                            <div className="pl-2">
-                                <span>{authUser?.name}</span>
-                                <span className="text-xs text-gray-500">{myDepartment}</span>
-                                <div className="flex gap-1 items-center">
-                                    <div className={`rounded-full w-[8px] h-[8px] ${authUser ? getStatusColor(authUser.status) : "bg-gray-400"}`}></div>
-                                    {authUser ? getStatusText(authUser.status) : "오프라인"}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <Settings size={18} className="hover:text-gray-200 cursor-pointer" />
-                </div>
-
-                {/* 경계선 */}
-                <div className="border-[0.5px] border-[#DDD6E8] w-[100%]"></div>
-
-                {/* 부서 목록 */}
-                <div className="p-4">
-                    {departments.map((dept) => {
-                        return (
-                            <div key={dept.id}>
-                                {/* 부서명 */}
-                                <div
-                                    onClick={() => {
-                                        if (!dept.id) return
-                                        setOpenDepts((prev) => prev.includes(dept.id)
-                                            ? prev.filter((id) => id !== dept.id)
-                                            : [...prev, dept.id]
-                                        )
-                                    }}
-                                    className="
-                                        text-gray-700 text-bold text-sm
-                                        w-[50%] flex items-center
-                                        cursor-pointer transition
-                                        hover:text-gray-200 select-none
-                                ">
-                                    {dept.name}
-                                    <ChevronRight
-                                        size={14}
-                                        className={`
-                                                transition-transform duration-300
-                                                ${openDepts.includes(dept.id) ? "rotate-90" : ""}`}
-                                    />
-                                </div>
-
-                                {/* 부서 인원 목록 */}
-                                {openDepts.includes(dept.id) && dept.members?.filter((member) => member.id !== myUserId).map((user) => (
-                                    <div
-                                        key={user.id}
-                                        className="
-                                            flex items-center gap-2 px-3 py-0.5 group
-                                            hover:rounded-md hover:bg-gray-700/30
-                                    ">
-                                        <div className={` rounded-full w-[8px] h-[8px] ${getStatusColor(user.status)}`}></div>
-                                        <div className="flex gap-1 items-end">
-                                            <span className="font-bold text-medium">{user.name}</span>
-                                            <span className="text-xs font-bold text-gray-700 pb-[3px]">{user.position}</span>
-                                        </div>
-                                        <div className="
-                                            invisible group-hover:visible flex gap-1 ml-auto
-                                        ">
-                                            <MessageCircle
-                                                size={16}
-                                                className="hover:text-gray-200 cursor-pointer"
-                                                onClick={() => handleOpenChat(user.id)}
-                                            />
-                                            <Settings size={16} className="hover:text-gray-200 cursor-pointer" />
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )
-                    })}
-                </div>
-
-                <div className="mt-auto p-4 mx-auto">
+                    {/* 채팅 버튼 */}
                     <button
-                        onClick={logout}
-                        className="bg-gray-200 px-4 py-2 rounded-md hover:bg-red-500 cursor-pointer"
-                    >
-                        로그아웃
+                        onClick={() => router.push("/chat")}
+                        className="
+                        rounded-lg border-gray-300 w-[50px] h-[50px] cursor-pointer
+                        inline-flex justify-center items-center hover:bg-gray-400 mr-2
+                    ">
+                        <MessageCircleMore />
+                    </button>
+
+                    {/* 게시판 버튼 */}
+                    <button
+                        onClick={() => router.push("/notice")}
+                        className="
+                        rounded-lg border-gray-300 w-[50px] h-[50px] cursor-pointer
+                        inline-flex justify-center items-center hover:bg-gray-400 mr-2
+                    ">
+                        <Newspaper />
                     </button>
                 </div>
             </div>
