@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { Prisma } from "@prisma/client";
 
 type DepartmentResponse = {
     id: string;
@@ -23,8 +25,66 @@ const positionOrder: Record<string, number> = {
     "부장": 6,
 };
 
-export async function GET() {
-    const users = await prisma.user.findMany();
+export async function GET(request: Request) {
+    const cookieStore = await cookies();
+    const userId = cookieStore.get("auth_user_id")?.value;
+
+    if (!userId) {
+        return NextResponse.json(
+            { message: "로그인이 필요합니다." },
+            { status: 401 }
+        );
+    }
+
+    const currentUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { companyId: true, },
+    });
+
+    if (!currentUser) {
+        return NextResponse.json(
+            { message: "사용자를 찾을 수 없습니다." },
+            { status: 404 }
+        );
+    }
+
+    const { searchParams } = new URL(request.url);
+
+    const department = searchParams.get("department");
+    const position = searchParams.get("position");
+    const keyword = searchParams.get("keyword")?.trim();
+
+    const where: Prisma.UserWhereInput = {
+        companyId: currentUser.companyId,
+    }
+
+    if (department) {
+        where.department = department;
+    }
+
+    if (position) {
+        where.position = position;
+    }
+
+    if (keyword) {
+        where.OR = [
+            { name: { contains: keyword, mode: "insensitive" } },
+            { department: { contains: keyword, mode: "insensitive" } },
+            { position: { contains: keyword, mode: "insensitive" } },
+        ]
+    }
+
+    const users = await prisma.user.findMany({
+        where,
+        select: {
+            id: true,
+            name: true,
+            department: true,
+            position: true,
+            status: true,
+            profilePic: true,
+        }
+    });
 
     users.sort((a, b) => {
         if (a.department !== b.department) {

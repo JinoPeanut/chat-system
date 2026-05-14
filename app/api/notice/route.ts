@@ -141,11 +141,36 @@ export async function PATCH(request: Request) {
 
     const body = await request.json();
 
-    if (!body.id || !body.title || !body.category) {
+    if (!body.id) {
         return NextResponse.json(
-            { message: "필수 값이 없습니다." },
-            { status: 400 },
+            { message: "게시글 id 가 필요합니다" },
+            { status: 400 }
         )
+    }
+
+    const updateData: Prisma.NoticeUpdateInput = {};
+
+    if (body.title !== undefined) {
+        updateData.title = body.title;
+    }
+
+    if (body.content !== undefined) {
+        updateData.content = body.content;
+    }
+
+    if (body.category !== undefined) {
+        updateData.category = body.category;
+    }
+
+    if (body.isPinned !== undefined) {
+        updateData.isPinned = body.isPinned;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+        return NextResponse.json(
+            { message: "수정할 값이 없습니다." },
+            { status: 400 }
+        );
     }
 
     const existingNotice = await prisma.notice.findFirst({
@@ -159,18 +184,13 @@ export async function PATCH(request: Request) {
         )
     }
 
-    const notice = await prisma.notice.update({
+    const updateNotice = await prisma.notice.update({
         where: { id: body.id },
-        data: {
-            title: body.title,
-            content: body.content ?? null,
-            category: body.category,
-            isPinned: body.isPinned ?? false,
-        },
+        data: updateData,
         include: { author: true },
     });
 
-    return NextResponse.json(notice);
+    return NextResponse.json(updateNotice);
 }
 
 export async function DELETE(request: Request) {

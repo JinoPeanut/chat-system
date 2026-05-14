@@ -2,7 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-export async function GET() {
+export async function GET(request: Request, { params }: { params: Promise<{ noticeId: string }> }) {
+    const { noticeId } = await params;
     const cookieStore = await cookies();
     const userId = cookieStore.get("auth_user_id")?.value;
 
@@ -25,31 +26,24 @@ export async function GET() {
         );
     }
 
-    const chatRooms = await prisma.chatRoom.findMany({
-        include: {
-            members: true,
-            messages: {
-                include: {
-                    sender: true,
-                },
-                orderBy: {
-                    timeAt: "asc",
-                },
+    const notice = await prisma.notice.findFirst({
+        where: {
+            id: noticeId,
+            author: {
+                companyId: currentUser.companyId,
             },
         },
-    });
-
-    const notices = await prisma.notice.findMany({
         include: {
             author: true,
         },
-        orderBy: {
-            createdAt: "desc",
-        },
     });
 
-    return NextResponse.json({
-        chatRooms,
-        notices,
-    });
+    if (!notice) {
+        return NextResponse.json(
+            { message: "게시글을 찾을 수 없습니다." },
+            { status: 404 }
+        );
+    }
+
+    return NextResponse.json(notice);
 }

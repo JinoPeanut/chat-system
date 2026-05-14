@@ -1,6 +1,5 @@
 "use client"
 
-import { User } from "@/types/chat"
 import { HomeResponse, Notice, NOTICE_TABS, NoticeScope } from "@/types/notice";
 import { useEffect, useState } from "react";
 
@@ -13,21 +12,19 @@ export const getCategoryName = (category: string) => {
 
 export default function NoticePanel() {
     const [activeTab, setActiveTab] = useState<NoticeScope>("all");
-    const [users, setUsers] = useState<User[]>([]);
     const [notices, setNotices] = useState<Notice[]>([]);
 
     const filteredNotices = notices
         .filter((notice) => activeTab === "all" || notice.category === activeTab);
 
+    const fetchHomeData = async () => {
+        const res = await fetch("/api/home");
+        const data: HomeResponse = await res.json();
+
+        setNotices(data.notices);
+    };
+
     useEffect(() => {
-        const fetchHomeData = async () => {
-            const res = await fetch("/api/home");
-            const data: HomeResponse = await res.json();
-
-            setUsers(data.users);
-            setNotices(data.notices);
-        }
-
         fetchHomeData();
     }, [])
 

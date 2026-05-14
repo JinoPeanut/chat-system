@@ -20,6 +20,9 @@ export default function ChatPanel() {
     const [departments, setDepartments] = useState<Department[]>([]);
     const [openDepts, setOpenDepts] = useState<string[]>([]);
     const [chatRooms, setChatRooms] = useState<Chat[]>([]);
+    const [keyword, setKeyword] = useState("");
+
+    const isSearching = keyword.trim().length > 0;
 
     const logout = async () => {
         await fetch("/api/auth/logout", {
@@ -29,6 +32,7 @@ export default function ChatPanel() {
         router.push("/");
     };
 
+    // 채팅방 이동
     const handleOpenChat = async (targetUserId: string) => {
         const res = await fetch("/api/chatrooms/personal", {
             method: "POST",
@@ -43,20 +47,31 @@ export default function ChatPanel() {
         router.push(`/chat/${data.room.id}`);
     }
 
+    // 부서목록 인원 표시 + 검색
+    const fetchData = async () => {
+        const params = new URLSearchParams();
+
+        if (keyword.trim()) {
+            params.set("keyword", keyword.trim());
+        }
+
+        const url = params.toString()
+            ? `/api/departments?${params.toString()}`
+            : `/api/departments`;
+
+        const deptRes = await fetch(url);
+        const deptData = await deptRes.json();
+        setDepartments(deptData);
+
+        // 채팅창 정보가 필요해서 추가
+        const homeRes = await fetch("/api/home");
+        const homeData: HomeResponse = await homeRes.json();
+        setChatRooms(homeData.chatRooms);
+    };
+
     useEffect(() => {
-        const fetchData = async () => {
-            const deptRes = await fetch("/api/departments");
-            const deptData = await deptRes.json();
-            setDepartments(deptData);
-
-            // 채팅창 정보가 필요해서 추가
-            const homeRes = await fetch("/api/home");
-            const homeData: HomeResponse = await homeRes.json();
-            setChatRooms(homeData.chatRooms);
-        };
-
         fetchData();
-    }, [])
+    }, [keyword])
 
     return (
         <>
@@ -99,11 +114,20 @@ export default function ChatPanel() {
                 {/* 경계선 */}
                 <div className="border-[0.5px] border-[#DDD6E8] w-[100%]"></div>
 
+                <div className="flex items-center justify-center mt-5">
+                    <input
+                        value={keyword}
+                        onChange={(e) => setKeyword(e.target.value)}
+                        placeholder="사원 검색"
+                        className="border border-gray-300 rounded-full px-4 py-2"
+                    />
+                </div>
+
                 {/* 부서 목록 */}
                 <div className="p-4">
                     {departments.map((dept) => {
                         return (
-                            <div key={dept.id}>
+                            <div key={dept.id} className="mb-2">
                                 {/* 부서명 */}
                                 <div
                                     onClick={() => {
@@ -114,7 +138,7 @@ export default function ChatPanel() {
                                         )
                                     }}
                                     className="
-                                        text-gray-700 text-bold text-sm
+                                        text-gray-700 text-bold text-sm gap-1
                                         w-[50%] flex items-center
                                         cursor-pointer transition
                                         hover:text-gray-200 select-none
@@ -129,7 +153,7 @@ export default function ChatPanel() {
                                 </div>
 
                                 {/* 부서 인원 목록 */}
-                                {openDepts.includes(dept.id) && dept.members?.filter((member) => member.id !== myUserId).map((user) => (
+                                {(isSearching || openDepts.includes(dept.id)) && dept.members?.filter((member) => member.id !== myUserId).map((user) => (
                                     <div
                                         key={user.id}
                                         className="

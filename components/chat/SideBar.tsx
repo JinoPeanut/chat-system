@@ -1,12 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react";
 import { Home, MessageCircleMore, Newspaper } from "lucide-react"
-import { Chat, UserStatus } from "@/types/chat";
+import { UserStatus } from "@/types/chat";
 import { useRouter } from "next/navigation"
-import { Department } from "@/types/department";
-import { HomeResponse } from "@/types/notice";
-import { useAuthStore } from "@/stores/useAuthStore";
 
 export function getStatusRingColor(status: UserStatus) {
     switch (status) {

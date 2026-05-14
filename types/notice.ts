@@ -28,7 +28,6 @@ export type Notice = {
 };
 
 export type HomeResponse = {
-    users: User[];
     chatRooms: Chat[];
     notices: Notice[];
 };
