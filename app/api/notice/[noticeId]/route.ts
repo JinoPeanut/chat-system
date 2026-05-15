@@ -33,8 +33,19 @@ export async function GET(request: Request, { params }: { params: Promise<{ noti
                 companyId: currentUser.companyId,
             },
         },
-        include: {
-            author: true,
+        select: {
+            authorId: true,
+            title: true,
+            category: true,
+            createdAt: true,
+            isPinned: true,
+            content: true,
+            author: {
+                select: {
+                    name: true,
+                    profilePic: true,
+                }
+            }
         },
     });
 

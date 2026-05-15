@@ -6,6 +6,7 @@ import { Profile, ProfileForm } from "@/types/profile";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { getStatusRingColor } from "../../chat/SideBar";
 import ProfileSetting from "./ProfileSetting";
+import ProfileAvatar from "@/components/common/ProfileAvatar";
 
 const getStatusWork = (work: string) => {
     if (work === "office") return "사무실";
@@ -169,18 +170,15 @@ export default function ProfileCard() {
 
             <div className="px-2">
                 <div className="flex flex-col items-center mt-2 mb-4 relative">
-                    {authUser?.profilePic ?
-                        (<img
-                            src={authUser.profilePic}
-                            alt="프로필 사진"
-                            className={`absolute w-[4rem] h-[4rem] bg-gray-400 rounded-full
-                        top-[-40px] ring-3 ${authUser ? getStatusRingColor(authUser.status) : "ring-gray-400"}`}
-                        />) : (
-                            <div className="absolute top-[-40px] flex h-20 w-20 items-center justify-center rounded-full">
-                                <User className={` w-[4rem] h-[4rem] bg-gray-100 rounded-full text-slate-400
-                                    ring-3 ${authUser ? getStatusRingColor(authUser.status) : "ring-gray-400"}`} />
-                            </div>
-                        )}
+
+                    <ProfileAvatar
+                        src={authUser?.profilePic}
+                        status={authUser?.status}
+                        alt="프로필 사진"
+                        size={64}
+                        absolute="absolute"
+                        absoluteStyle="top-[-40px]"
+                    />
 
                     <div className="flex gap-1 font-bold items-center mt-9 tracking-tight">
                         <p>{authUserName}</p>

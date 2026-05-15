@@ -1,14 +1,8 @@
 "use client"
 
 import { HomeResponse, Notice, NOTICE_TABS, NoticeScope } from "@/types/notice";
+import { getCategoryName } from "@/utils/noticeUtils";
 import { useEffect, useState } from "react";
-
-export const getCategoryName = (category: string) => {
-    if (category === "notice") return "공지사항"
-    if (category === "event") return "이벤트"
-    if (category === "update") return "업데이트"
-    if (category === "etc") return "기타"
-}
 
 export default function NoticePanel() {
     const [activeTab, setActiveTab] = useState<NoticeScope>("all");
