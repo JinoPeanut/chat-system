@@ -77,12 +77,12 @@ export default function MainNoticePanel() {
                         </div>
 
                         {/* 글쓰기 버튼 */}
-                        <button
-                            //onClick={}
+                        <Link
+                            href={"/notice/write"}
                             className="bg-violet-500 text-white rounded-md px-4 py-2"
                         >
                             글쓰기
-                        </button>
+                        </Link>
                     </div>
                 </div>
             </div>
