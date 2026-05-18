@@ -3,7 +3,7 @@ import ProfileAvatar from "@/components/common/ProfileAvatar";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { Notice } from "@/types/notice";
 import { getCategoryName, getCategoryStyle } from "@/utils/noticeUtils";
-import { ChevronLeft, Clock, Eye, MoreHorizontal, PinIcon } from "lucide-react";
+import { ChevronLeft, Clock, Download, Eye, MoreHorizontal, Paperclip, PinIcon } from "lucide-react";
 import { useEffect, useState } from "react"
 
 type NoticeDetailProps = {
@@ -133,13 +133,63 @@ export default function NoticeDetail({ noticeId }: NoticeDetailProps) {
             {/* 게시물 내용 */}
             <div className="min-h-0 flex-1 overflow-y-auto">
                 {notice?.content
-                    ? (<div className="whitespace-pre-wrap leading-7 text-gray-700">
-                        {notice.content}
+                    ? (<div
+                        className="whitespace-pre-wrap leading-7 text-gray-700"
+                        dangerouslySetInnerHTML={{ __html: notice.content }}>
                     </div>)
                     : (<div className="flex h-full items-center justify-center text-gray-400">
                         <p>본문 내용이 없습니다.</p>
                     </div>)
                 }
+
+                {notice?.attachments
+                    ?.filter((file) => file.fileType?.startsWith("image/"))
+                    .map((file) => {
+                        return (
+                            <img
+                                key={file.id}
+                                src={file.fileUrl}
+                                alt={file.fileName}
+                                className="mt-4 max-h-[500px] w-full rounded-xl object-contain"
+                            />
+                        )
+                    })
+                }
+
+                {notice?.attachments && notice.attachments.length > 0 && (
+                    <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                        <div className="mb-3 flex items-center gap-2 font-semibold text-gray-700">
+                            <Paperclip size={18} />
+                            <span>첨부파일</span>
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            {notice.attachments.map((file) => {
+                                return (
+                                    <a
+                                        key={file.id}
+                                        href={file.fileUrl}
+                                        download={file.fileName}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 hover:bg-gray-100"
+                                    >
+                                        <div>
+                                            <p className="font-medium text-gray-800">{file.fileName}</p>
+                                            {file.fileSize && (
+                                                <p className="text-sm text-gray-400">
+                                                    {(file.fileSize / 1024).toFixed(1)} KB
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        <Download size={18} className="text-gray-500" />
+                                    </a>
+                                )
+                            })}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )

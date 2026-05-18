@@ -91,7 +91,21 @@ model Notice {
   isPinned    Boolean        @default(false)
   authorId    String
   author      User           @relation(fields: [authorId], references: [id])
+  attachments NoticeAttachment[]
+
   @@index([createdAt])
+}
+
+model NoticeAttachment {
+  id          String          @id @default(uuid())
+  noticeId    String
+  fileName    String
+  fileUrl     String
+  fileSize    Int?
+  fileType    String?
+  createdAt   DateTime         @default(now())
+
+  notice      Notice           @relation(fields: [noticeId], references: [id], onDelete: Cascade)
 }
 
 model Attendance {

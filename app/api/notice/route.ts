@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { Prisma } from "@prisma/client";
+import { writeFile, mkdir } from "fs/promises";
+import path from "path";
 
 const NOTICE_CATEGORIES = ["notice", "event", "update", "etc"] as const;
 
@@ -62,7 +64,7 @@ export async function GET(request: Request) {
 
     const notice = await prisma.notice.findMany({
         where,
-        include: { author: true },
+        include: { author: true, attachments: true },
         orderBy: [
             { isPinned: "desc" },
             { createdAt: "desc" },
@@ -91,12 +93,34 @@ export async function POST(request: Request) {
         );
     }
 
-    const body = await request.json();
+    const formData = await request.formData();
+    const title = formData.get("title");
+    const category = formData.get("category");
+    const content = formData.get("content");
+    const isPinned = formData.get("isPinned");
+    const files = formData.getAll("files");
 
-    if (!body.title || !body.category) {
+    if (typeof title !== "string" || typeof category !== "string") {
         return NextResponse.json(
             { message: "제목과 카테고리는 필수입니다." },
             { status: 400 },
+        )
+    }
+
+    if (!title.trim() || !category.trim()) {
+        return NextResponse.json(
+            { message: "제목과 카테고리는 필수입니다." },
+            { status: 400 },
+        )
+    }
+
+    const contentValue = typeof content === "string" ? content : null;
+    const isPinnedValue = isPinned === "true";
+
+    if (!NOTICE_CATEGORIES.includes(category as typeof NOTICE_CATEGORIES[number])) {
+        return NextResponse.json(
+            { message: "올바르지 않은 카테고리 입니다" },
+            { status: 400 }
         )
     }
 
@@ -114,16 +138,46 @@ export async function POST(request: Request) {
     const notice = await prisma.notice.create({
         data: {
             id: crypto.randomUUID(),
-            title: body.title,
-            content: body.content ?? null,
-            category: body.category,
-            isPinned: body.isPinned ?? false,
+            title: title.trim(),
+            content: contentValue,
+            category: category as typeof NOTICE_CATEGORIES[number],
+            isPinned: isPinnedValue,
             authorId: userId,
         },
         include: {
             author: true,
         }
     })
+
+    const uploadedFiles = files.filter((file): file is File => file instanceof File);
+
+    if (uploadedFiles.length > 0) {
+        const uploadDir = path.join(process.cwd(), "public", "uploads", "notices");
+
+        await mkdir(uploadDir, { recursive: true });
+
+        await Promise.all(
+            uploadedFiles.map(async (file) => {
+                const bytes = await file.arrayBuffer();
+                const buffer = Buffer.from(bytes);
+
+                const safeFileName = `${crypto.randomUUID()}-${file.name}`;
+                const filePath = path.join(uploadDir, safeFileName);
+
+                await writeFile(filePath, buffer);
+
+                await prisma.noticeAttachment.create({
+                    data: {
+                        noticeId: notice.id,
+                        fileName: file.name,
+                        fileUrl: `/uploads/notices/${safeFileName}`,
+                        fileSize: file.size,
+                        fileType: file.type,
+                    }
+                })
+            })
+        )
+    }
 
     return NextResponse.json(notice, { status: 201 });
 }

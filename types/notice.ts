@@ -16,6 +16,14 @@ export type NoticeState = {
     allIds: string[],
 }
 
+export type NoticeAttachment = {
+    id: string;
+    fileName: string;
+    fileUrl: string;
+    fileSize?: number | null;
+    fileType?: string | null;
+};
+
 export type Notice = {
     id: string;
     category: NoticeCategory;   // 제목 앞 [태그] 용
@@ -25,6 +33,7 @@ export type Notice = {
     createdAt: string;          // 만든 시간
     isPinned?: boolean;         // 상단 고정 필요하면
     author?: User;
+    attachments?: NoticeAttachment[];
 };
 
 export type HomeResponse = {

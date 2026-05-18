@@ -45,6 +45,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ noti
                     name: true,
                     profilePic: true,
                 }
+            },
+            attachments: {
+                select: {
+                    id: true,
+                    fileName: true,
+                    fileUrl: true,
+                    fileSize: true,
+                    fileType: true,
+                }
             }
         },
     });

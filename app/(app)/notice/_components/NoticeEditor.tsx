@@ -3,11 +3,11 @@
 import { EditorContent, useEditor } from "@tiptap/react";
 import { Underline } from "@tiptap/extension-underline"
 import { StarterKit } from "@tiptap/starter-kit";
-import { TextStyle } from "@tiptap/extension-text-style";
+import { TextStyle, Color } from "@tiptap/extension-text-style";
 import { FontSize } from "@tiptap/extension-text-style/font-size";
 import Link from "@tiptap/extension-link";
-import { useState } from "react";
-import { Link2, List, ListOrdered } from "lucide-react";
+import { useRef, useState } from "react";
+import { Link2, List, ListOrdered, Redo2, Undo2 } from "lucide-react";
 
 type NoticeEditorProps = {
     value: string,
@@ -18,6 +18,7 @@ type FontSize = "" | "12px" | "14px" | "16px" | "20px" | "24px";
 
 type toggleType = {
     fontSize: FontSize,
+    color: string,
     bold: boolean,
     italic: boolean,
     underline: boolean,
@@ -28,12 +29,15 @@ type toggleType = {
 }
 
 export default function NoticeEditor({ value, onChange }: NoticeEditorProps) {
+    const validContentRef = useRef<string>(value);
+
     const editor = useEditor({
         extensions: [
             StarterKit,
             Underline,
             TextStyle,
             FontSize,
+            Color,
             Link.configure({
                 openOnClick: false,
             })
@@ -41,12 +45,20 @@ export default function NoticeEditor({ value, onChange }: NoticeEditorProps) {
         content: value,
         immediatelyRender: false,
         onUpdate: ({ editor }) => {
-            onChange(editor.getHTML());
+            const contentLength = editor.getText().length;
+            if (contentLength > 10000) {
+                editor.commands.setContent(validContentRef.current);
+                return;
+            } else {
+                validContentRef.current = editor.getHTML();
+                onChange(editor.getHTML());
+            }
         }
     });
 
     const [activeToggle, setActiveToggle] = useState<toggleType>({
         fontSize: "",
+        color: "#111827",
         bold: false,
         italic: false,
         underline: false,
@@ -62,7 +74,7 @@ export default function NoticeEditor({ value, onChange }: NoticeEditorProps) {
 
             setActiveToggle((prev) => ({
                 ...prev,
-                link: !prev.link,
+                link: false,
             }));
 
             return;
@@ -124,7 +136,11 @@ export default function NoticeEditor({ value, onChange }: NoticeEditorProps) {
                 <button
                     type="button"
                     onClick={() => {
-                        editor.chain().focus().toggleBold().run()
+                        if (activeToggle.bold) {
+                            editor.chain().focus().unsetBold().run();
+                        } else {
+                            editor.chain().focus().setBold().run();
+                        }
                         setActiveToggle((prev) => ({
                             ...prev,
                             bold: !prev.bold
@@ -139,7 +155,11 @@ export default function NoticeEditor({ value, onChange }: NoticeEditorProps) {
                 <button
                     type="button"
                     onClick={() => {
-                        editor.chain().focus().toggleItalic().run()
+                        if (activeToggle.italic) {
+                            editor.chain().focus().unsetItalic().run();
+                        } else {
+                            editor.chain().focus().setItalic().run();
+                        }
                         setActiveToggle((prev) => ({
                             ...prev,
                             italic: !prev.italic,
@@ -154,7 +174,12 @@ export default function NoticeEditor({ value, onChange }: NoticeEditorProps) {
                 <button
                     type="button"
                     onClick={() => {
-                        editor.chain().focus().toggleUnderline().run()
+                        if (activeToggle.underline) {
+                            editor.chain().focus().unsetUnderline().run();
+                        } else {
+                            editor.chain().focus().setUnderline().run();
+                        }
+
                         setActiveToggle((prev) => ({
                             ...prev,
                             underline: !prev.underline,
@@ -169,7 +194,12 @@ export default function NoticeEditor({ value, onChange }: NoticeEditorProps) {
                 <button
                     type="button"
                     onClick={() => {
-                        editor.chain().focus().toggleStrike().run()
+                        if (activeToggle.strike) {
+                            editor.chain().focus().unsetStrike().run();
+                        } else {
+                            editor.chain().focus().setStrike().run();
+                        }
+
                         setActiveToggle((prev) => ({
                             ...prev,
                             strike: !prev.strike,
@@ -180,6 +210,24 @@ export default function NoticeEditor({ value, onChange }: NoticeEditorProps) {
                     S
                 </button>
 
+                <span className="w-[0.5px] h-7 bg-gray-200" />
+
+                {/* 텍스트 색상 버튼 */}
+                <input
+                    type="color"
+                    value={activeToggle.color}
+                    onChange={(e) => {
+                        const color = e.target.value;
+
+                        editor.chain().focus().setColor(color).run();
+                        setActiveToggle((prev) => ({
+                            ...prev,
+                            color,
+                        }))
+                    }}
+                    className="h-7 w-7 cursor-pointer rounded-md border border-gray-200"
+                />
+
                 {/* 글머리 목록 버튼 */}
                 <button
                     type="button"
@@ -188,6 +236,7 @@ export default function NoticeEditor({ value, onChange }: NoticeEditorProps) {
                         setActiveToggle((prev) => ({
                             ...prev,
                             bulletList: !prev.bulletList,
+                            orderedList: false,
                         }))
                     }}
                     className={`w-7 h-7 rounded-md text-center cursor-pointer ${activeToggle.bulletList ? "bg-gray-200 text-violet-600" : ""}`}
@@ -205,6 +254,7 @@ export default function NoticeEditor({ value, onChange }: NoticeEditorProps) {
                         setActiveToggle((prev) => ({
                             ...prev,
                             orderedList: !prev.orderedList,
+                            bulletList: false,
                         }))
                     }}
                     className={`w-7 h-7 rounded-md text-center cursor-pointer ${activeToggle.orderedList ? "bg-gray-200 text-violet-600" : ""}`}
@@ -213,6 +263,8 @@ export default function NoticeEditor({ value, onChange }: NoticeEditorProps) {
                         <ListOrdered size={15} />
                     </div>
                 </button>
+
+                <span className="w-[0.5px] h-7 bg-gray-200" />
 
                 {/* 링크 버튼 */}
                 <button
@@ -224,6 +276,32 @@ export default function NoticeEditor({ value, onChange }: NoticeEditorProps) {
                         <Link2 size={15} />
                     </div>
                 </button>
+
+                <span className="w-[0.5px] h-7 bg-gray-200" />
+
+                {/* 되돌리기 버튼 */}
+                <button
+                    type="button"
+                    onClick={() => editor.chain().focus().undo().run()}
+                    disabled={!editor.can().undo()}
+                    className={`w-7 h-7 rounded-md text-center cursor-pointer disabled:cursor-not-allowed disabled:opacity-30`}
+                >
+                    <div className="flex items-center justify-center">
+                        <Undo2 size={15} />
+                    </div>
+                </button>
+
+                {/* 앞으로 버튼 */}
+                <button
+                    type="button"
+                    onClick={() => editor.chain().focus().redo().run()}
+                    disabled={!editor.can().redo()}
+                    className={`w-7 h-7 rounded-md text-center cursor-pointer disabled:cursor-not-allowed disabled:opacity-30`}
+                >
+                    <div className="flex items-center justify-center">
+                        <Redo2 size={15} />
+                    </div>
+                </button>
             </div>
 
             <EditorContent
@@ -232,7 +310,12 @@ export default function NoticeEditor({ value, onChange }: NoticeEditorProps) {
                     [&_.ProseMirror]:min-h-[240px]
                     [&_.ProseMirror]:outline-none
                     [&_.ProseMirror_a]:text-blue-600
-                    [&_.ProseMirror_a]:underline"
+                    [&_.ProseMirror_a]:underline
+                    [&_.ProseMirror_ul]:list-disc
+                    [&_.ProseMirror_ul]:pl-6
+                    [&_.ProseMirror_ol]:list-decimal
+                    [&_.ProseMirror_ol]:pl-6"
+
             />
         </div>
     )
