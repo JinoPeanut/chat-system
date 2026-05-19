@@ -6,7 +6,7 @@ import { StarterKit } from "@tiptap/starter-kit";
 import { TextStyle, Color } from "@tiptap/extension-text-style";
 import { FontSize } from "@tiptap/extension-text-style/font-size";
 import Link from "@tiptap/extension-link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link2, List, ListOrdered, Redo2, Undo2 } from "lucide-react";
 
 type NoticeEditorProps = {
@@ -55,6 +55,14 @@ export default function NoticeEditor({ value, onChange }: NoticeEditorProps) {
             }
         }
     });
+
+    useEffect(() => {
+        if (!editor) return;
+        if (value === editor.getHTML()) return;
+
+        editor.commands.setContent(value);
+        validContentRef.current = value;
+    }, [editor, value]);
 
     const [activeToggle, setActiveToggle] = useState<toggleType>({
         fontSize: "",

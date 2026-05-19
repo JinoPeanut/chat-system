@@ -34,6 +34,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ noti
             },
         },
         select: {
+            id: true,
             authorId: true,
             title: true,
             category: true,

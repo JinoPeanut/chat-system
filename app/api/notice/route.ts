@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { Prisma } from "@prisma/client";
-import { writeFile, mkdir } from "fs/promises";
+import { writeFile, mkdir, unlink } from "fs/promises";
 import path from "path";
 
 const NOTICE_CATEGORIES = ["notice", "event", "update", "etc"] as const;
@@ -193,9 +193,17 @@ export async function PATCH(request: Request) {
         );
     }
 
-    const body = await request.json();
+    const formData = await request.formData();
 
-    if (!body.id) {
+    const id = formData.get("id");
+    const title = formData.get("title");
+    const category = formData.get("category");
+    const content = formData.get("content");
+    const isPinned = formData.get("isPinned");
+    const files = formData.getAll("files");
+    const deletedAttachmentIds = formData.getAll("deletedAttachmentIds");
+
+    if (typeof id !== "string" || !id.trim()) {
         return NextResponse.json(
             { message: "게시글 id 가 필요합니다" },
             { status: 400 }
@@ -204,23 +212,53 @@ export async function PATCH(request: Request) {
 
     const updateData: Prisma.NoticeUpdateInput = {};
 
-    if (body.title !== undefined) {
-        updateData.title = body.title;
+    if (typeof title !== "string" || typeof category !== "string") {
+        return NextResponse.json(
+            { message: "제목과 카테고리는 필수 입니다." },
+            { status: 400 }
+        )
     }
 
-    if (body.content !== undefined) {
-        updateData.content = body.content;
+    if (!title.trim() || !category.trim()) {
+        return NextResponse.json(
+            { message: "제목과 카테고리는 필수 입니다." },
+            { status: 400 }
+        )
     }
 
-    if (body.category !== undefined) {
-        updateData.category = body.category;
+    if (typeof title === "string") {
+        updateData.title = title.trim();
     }
 
-    if (body.isPinned !== undefined) {
-        updateData.isPinned = body.isPinned;
+    if (typeof content === "string") {
+        updateData.content = content;
     }
 
-    if (Object.keys(updateData).length === 0) {
+    if (typeof isPinned === "string") {
+        updateData.isPinned = isPinned === "true";
+    }
+
+    if (typeof category === "string") {
+        if (!NOTICE_CATEGORIES.includes(category as typeof NOTICE_CATEGORIES[number])) {
+            return NextResponse.json(
+                { message: "올바르지 않은 카테고리 입니다" },
+                { status: 400 }
+            )
+        }
+
+        updateData.category = category as typeof NOTICE_CATEGORIES[number];
+    }
+
+    const uploadedFiles = files.filter((file): file is File => file instanceof File);
+
+    const deletedAttachmentIdList = deletedAttachmentIds.filter(
+        (id): id is string => typeof id === "string" && id.trim() !== ""
+    );
+
+    if (Object.keys(updateData).length === 0 &&
+        uploadedFiles.length === 0 &&
+        deletedAttachmentIdList.length === 0
+    ) {
         return NextResponse.json(
             { message: "수정할 값이 없습니다." },
             { status: 400 }
@@ -228,7 +266,7 @@ export async function PATCH(request: Request) {
     }
 
     const existingNotice = await prisma.notice.findFirst({
-        where: { id: body.id, authorId: userId }
+        where: { id: id, authorId: userId }
     })
 
     if (!existingNotice) {
@@ -238,15 +276,84 @@ export async function PATCH(request: Request) {
         )
     }
 
-    const updateNotice = await prisma.notice.update({
-        where: { id: body.id },
+    await prisma.notice.update({
+        where: { id },
         data: updateData,
-        include: { author: true },
+    })
+
+    if (deletedAttachmentIdList.length > 0) {
+        const attachmentsToDelete = await prisma.noticeAttachment.findMany({
+            where: {
+                id: { in: deletedAttachmentIdList },
+                noticeId: id,
+            },
+            select: {
+                id: true,
+                fileUrl: true,
+            },
+        });
+
+        await Promise.all(
+            attachmentsToDelete.map(async (file) => {
+                const filePath = path.join(
+                    process.cwd(),
+                    "public",
+                    file.fileUrl.replace(/^\/+/, "")
+                );
+
+                try {
+                    await unlink(filePath);
+                } catch {
+                    // 실제 파일이 이미 없어도 DB 삭제는 계속 진행
+                }
+            })
+        );
+
+        await prisma.noticeAttachment.deleteMany({
+            where: {
+                id: { in: attachmentsToDelete.map((file) => file.id) },
+                noticeId: id,
+            },
+        });
+    }
+
+    if (uploadedFiles.length > 0) {
+        const uploadDir = path.join(process.cwd(), "public", "uploads", "notices");
+
+        await mkdir(uploadDir, { recursive: true });
+
+        await Promise.all(
+            uploadedFiles.map(async (file) => {
+                const bytes = await file.arrayBuffer();
+                const buffer = Buffer.from(bytes);
+
+                const safeFileName = `${crypto.randomUUID()}-${file.name}`;
+                const filePath = path.join(uploadDir, safeFileName);
+
+                await writeFile(filePath, buffer);
+
+                await prisma.noticeAttachment.create({
+                    data: {
+                        noticeId: id,
+                        fileName: file.name,
+                        fileUrl: `/uploads/notices/${safeFileName}`,
+                        fileSize: file.size,
+                        fileType: file.type,
+                    },
+                });
+            })
+        );
+    }
+
+    const updateNotice = await prisma.notice.findUnique({
+        where: { id },
+        include: { author: true, attachments: true },
     });
 
     return NextResponse.json(updateNotice);
 }
 
+// Delete
 export async function DELETE(request: Request) {
     const cookieStore = await cookies();
     const userId = cookieStore.get("auth_user_id")?.value;
@@ -260,7 +367,7 @@ export async function DELETE(request: Request) {
 
     const body = await request.json();
 
-    if (!body) {
+    if (!body.id) {
         return NextResponse.json(
             { message: "게시글 아이디가 필요합니다." },
             { status: 400 }

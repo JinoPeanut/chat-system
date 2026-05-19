@@ -53,3 +53,60 @@
     animation: signup-check-draw 0.45s ease-out forwards;
     animation-delay: 1.2s;
 }
+
+@keyframes slide-toast {
+    0% {
+        opacity: 0;
+        transform: translateY(-130%);
+    }
+
+    15% {
+        opacity: 1;
+        transform: translateY(-77%);
+    }
+
+    85% {
+        opacity: 1;
+        transform: translateY(-77%);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(-130%);
+    }
+}
+
+.animate-slide-toast {
+    animation: slide-toast 1.5s ease-in-out forwards;
+}
+
+@keyframes toast-timeBar {
+    0% {
+        opacity: 0;
+        width: 0%;
+    }
+
+    25% {
+        opacity: 1;
+        width: 25%;
+    }
+
+    50% {
+        opacity: 1;
+        width: 50%;
+    }
+
+    75% {
+        opacity: 1;
+        width: 75%;
+    }
+
+    100% {
+        opacity: 1;
+        width: 100%;
+    }
+}
+
+.animate-toast-timer {
+    animation: toast-timeBar 1.3s ease-out forwards;
+}

@@ -4,6 +4,7 @@ import { useAuthStore } from "@/stores/useAuthStore";
 import { Notice } from "@/types/notice";
 import { getCategoryName, getCategoryStyle } from "@/utils/noticeUtils";
 import { ChevronLeft, Clock, Download, Eye, MoreHorizontal, Paperclip, PinIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react"
 
 type NoticeDetailProps = {
@@ -12,9 +13,13 @@ type NoticeDetailProps = {
 
 export default function NoticeDetail({ noticeId }: NoticeDetailProps) {
     const authUser = useAuthStore((state) => state.user);
+    const router = useRouter();
 
     const [notice, setNotice] = useState<Notice | null>(null);
     const [menuOpen, setMenuOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [toastMessage, setToastMessage] = useState("")
+    const [toastType, setToastType] = useState<"error" | "success">("success");
 
     const notice_title = notice ? notice.title : "제목 없음";
     const notice_category = notice ? notice.category : "카테고리 없음";
@@ -36,11 +41,63 @@ export default function NoticeDetail({ noticeId }: NoticeDetailProps) {
         return `${year}.${month}.${day} ${hour}:${minute}`;
     }
 
+    const showToast = (message: string, type: "success" | "error") => {
+        if (toastMessage) return;
+
+        setToastMessage(message);
+        setToastType(type);
+
+        setTimeout(() => {
+            setToastMessage("");
+        }, 1500);
+    }
+
     const fetchNoticeDetail = async () => {
         const res = await fetch(`/api/notice/${noticeId}`);
         const data = await res.json();
 
         setNotice(data);
+    }
+
+    const handleDelete = async () => {
+        if (isDeleting) return
+        if (!notice?.id) {
+            showToast("삭제할 게시글 정보를 찾을 수 없습니다.", "error");
+            return;
+        }
+
+        try {
+            setIsDeleting(true);
+
+            const res = await fetch("/api/notice", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: notice?.id,
+                }),
+            });
+
+            if (!res.ok) {
+                if (res.status === 401) {
+                    showToast("로그인이 필요합니다.", "error");
+                } else if (res.status === 400) {
+                    showToast("게시글 아이디가 필요합니다.", "error");
+                } else if (res.status === 404) {
+                    showToast("삭제할 수 없는 게시물입니다.", "error");
+                }
+                return;
+            }
+
+            showToast("게시글이 삭제되었습니다.", "success");
+            setTimeout(() => {
+                router.push("/notice");
+            }, 1500)
+        } catch (error) {
+            showToast("서버에 연결할 수 없습니다", "error");
+        } finally {
+            setIsDeleting(false);
+        }
+
     }
 
     useEffect(() => {
@@ -49,6 +106,15 @@ export default function NoticeDetail({ noticeId }: NoticeDetailProps) {
 
     return (
         <div className="h-[100dvh] flex flex-col gap-4 px-8 py-6 bg-white rounded-md">
+
+            {/* 상호작용 메세지 */}
+            {toastMessage && (
+                <div className={`fixed right-40 top-15 z-50 rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-lg
+                    animate-slide-toast ${toastType === "success" ? "bg-emerald-500" : "bg-red-500"}`}>
+                    {toastMessage}
+                    <div className={`mt-2 animate-toast-timer h-1 w-full ${toastType === "error" ? "bg-red-300" : "bg-emerald-300"}`} />
+                </div>
+            )}
 
             {/* 목록으로 버튼 */}
             <button className="mb-10">
@@ -87,16 +153,17 @@ export default function NoticeDetail({ noticeId }: NoticeDetailProps) {
                                     flex flex-col gap-3 p-2 bg-white"
                                 >
                                     <button
-                                        //onClick={}
+                                        onClick={() => router.push(`/notice/${noticeId}/edit`)}
                                         className="hover:bg-emerald-100 px-2 py-1 rounded-md cursor-pointer"
                                     >
                                         수정
                                     </button>
                                     <button
-                                        //onClick={}
+                                        onClick={handleDelete}
+                                        disabled={isDeleting}
                                         className="hover:bg-red-100 px-2 py-1 rounded-md cursor-pointer"
                                     >
-                                        삭제
+                                        {isDeleting ? "삭제중.." : "삭제"}
                                     </button>
                                 </div>
                             )}

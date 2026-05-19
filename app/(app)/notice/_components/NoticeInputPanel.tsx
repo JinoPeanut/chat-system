@@ -2,23 +2,23 @@
 
 import { getCategoryName, getCategoryStyle } from "@/utils/noticeUtils";
 import { ChevronDown, ChevronLeft, ChevronRight, PinIcon } from "lucide-react";
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import NoticeEditor from "./NoticeEditor";
 import PreviewIcon from "./PreviewIcon";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useRouter } from "next/navigation";
+import { NoticeAttachment } from "@/types/notice";
 
-const noticeInputField = [
-    { key: "title", label: "제목", type: "text", placeholder: "제목을 입력해주세요." },
-    { key: "content", label: "내용", type: "textField", placeholder: "내용을 입력해주세요." },
-    { key: "file", label: "첨부파일", type: "file", placeholder: "또는 파일을 드래그 해서 첨부하세요" }
-] as const;
+type NoticeInputPanelProps = {
+    mode: "create" | "edit"
+    noticeId?: string,
+}
 
 const noticeCategoryField = [
     { key: "notice" }, { key: "event" }, { key: "update" }, { key: "etc" }
 ]
 
-export default function NoticeInputPanel() {
+export default function NoticeInputPanel({ mode, noticeId }: NoticeInputPanelProps) {
     const authUser = useAuthStore((state) => state.user);
     const router = useRouter();
     const [form, setForm] = useState({
@@ -36,12 +36,25 @@ export default function NoticeInputPanel() {
     })
 
     const [selectedFile, setSelectedFile] = useState<File[]>([]);
-    const [submitError, setSubmitError] = useState("");
+
+    const [toastMessage, setToastMessage] = useState("");
+    const [toastType, setToastType] = useState<"error" | "success">("success");
+
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [existingAttachments, setExistingAttachments] = useState<NoticeAttachment[]>([]);
+    const [deletedAttachmentIds, setDeletedAttachmentIds] = useState<string[]>([]);
     const [categoryOpen, setCategoryOpen] = useState(false);
 
     const titleLength = form.title.length;
     const contentLength = form.content.length;
     const hasPreviewContent = Boolean(form.category || form.title || form.content);
+
+    const visibleExistingAttachments = existingAttachments.filter(
+        (file) => !deletedAttachmentIds.includes(file.id)
+    );
+
+    const hasVisibleExistingAttachments = visibleExistingAttachments.length > 0;
+    const hasSelectedFiles = selectedFile.length > 0;
 
     const handleChange = (key: keyof typeof form, value: string) => {
         if (key === "title" && value.length > 100) return;
@@ -68,14 +81,53 @@ export default function NoticeInputPanel() {
         }))
     }
 
-    const handleSubmit = async () => {
+    const handleRemoveExistingAttachment = (attachmentId: string) => {
+        setDeletedAttachmentIds((prev) => [...prev, attachmentId]);
+    };
+
+    const showToast = (message: string, type: "success" | "error") => {
+        if (toastMessage) return;
+
+        setToastMessage(message);
+        setToastType(type);
+
+        setTimeout(() => {
+            setToastMessage("");
+        }, 1500);
+    }
+
+    const fetchNoticeData = async () => {
+        if (!noticeId) return;
+
+        const res = await fetch(`/api/notice/${noticeId}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+            showToast(data.message ?? "게시글 정보를 불러오지 못했습니다", "error");
+            return;
+        }
+
+        setForm({
+            title: data.title ?? "",
+            category: data.category ?? "",
+            content: data.content ?? "",
+            isPinned: data.isPinned ?? false,
+        })
+
+        setExistingAttachments(data.attachments ?? []);
+    }
+
+    const handleCreateNotice = async () => {
+        if (isProcessing) return
+        setToastMessage("");
+
         if (!form.title.trim()) {
-            setSubmitError("제목을 입력해 주세요.");
+            showToast("제목을 입력해 주세요.", "error");
             return;
         }
 
         if (!form.category) {
-            setSubmitError("카테고리를 선택해 주세요.");
+            showToast("카테고리를 선택해 주세요.", "error");
             return;
         }
 
@@ -90,30 +142,142 @@ export default function NoticeInputPanel() {
             formData.append("files", file);
         })
 
-        const res = await fetch("/api/notice", {
-            method: "POST",
-            body: formData,
-        })
+        try {
+            setIsProcessing(true);
 
-        const data = await res.json();
+            const res = await fetch("/api/notice", {
+                method: "POST",
+                body: formData,
+            })
 
-        if (!res.ok) {
-            if (res.status === 401) {
-                setSubmitError("로그인이 필요합니다.");
-            } else if (res.status === 400) {
-                setSubmitError("제목과 카테고리는 필수입니다.");
-            } else if (res.status === 404) {
-                setSubmitError("사용자를 찾을 수 없습니다.");
+            const data = await res.json();
+
+            if (!res.ok) {
+                if (res.status === 401) {
+                    showToast("로그인이 필요합니다.", "error");
+                } else if (res.status === 400) {
+                    showToast("제목과 카테고리는 필수입니다.", "error");
+                } else if (res.status === 404) {
+                    showToast("사용자를 찾을 수 없습니다.", "error");
+                }
+
+                return;
             }
 
+            showToast("게시글이 등록되었습니다.", "success");
+
+            setTimeout(() => {
+                router.push(`/notice/${data.id}`);
+            }, 1500)
+        } catch (error) {
+            showToast("서버와 연결할 수 없습니다.", "error");
+        } finally {
+            setIsProcessing(false);
+        }
+    }
+
+    const handleEditNotice = async () => {
+        if (isProcessing) return;
+
+        setToastMessage("");
+
+        if (!noticeId) {
+            showToast("수정할 게시글 정보를 찾을 수 없습니다", "error");
             return;
         }
 
-        router.push(`/notice/${data.id}`);
+        if (!form.title.trim()) {
+            showToast("제목을 입력해 주세요.", "error");
+            return;
+        }
+
+        if (!form.category) {
+            showToast("카테고리를 선택해 주세요.", "error");
+            return;
+        }
+
+        const formData = new FormData();
+
+        formData.append("id", noticeId);
+        formData.append("title", form.title);
+        formData.append("category", form.category);
+        formData.append("content", form.content);
+        formData.append("isPinned", String(form.isPinned));
+
+        deletedAttachmentIds.forEach((attachmentId) => {
+            formData.append("deletedAttachmentIds", attachmentId);
+        });
+
+        selectedFile.forEach((file) => {
+            formData.append("files", file);
+        });
+
+        try {
+            setIsProcessing(true);
+
+            const res = await fetch("/api/notice", {
+                method: "PATCH",
+                body: formData,
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                if (res.status === 401) {
+                    showToast("로그인이 필요합니다.", "error");
+                } else if (res.status === 400) {
+                    showToast("수정할 값이 올바르지 않습니다.", "error");
+                } else if (res.status === 404) {
+                    showToast("수정할 수 없는 게시글입니다.", "error");
+                } else {
+                    showToast("게시글 수정에 실패했습니다.", "error");
+                }
+
+                return;
+            }
+
+            showToast("게시글이 수정되었습니다.", "success");
+
+            setTimeout(() => {
+                router.push(`/notice/${data.id}`);
+            }, 1500)
+
+        } catch (error) {
+            showToast("서버와 연결할 수 없습니다", "error");
+        } finally {
+            setIsProcessing(false);
+        }
     }
+
+
+    const handleSubmit = async () => {
+        if (mode === "create") {
+            await handleCreateNotice();
+        }
+
+        if (mode === "edit") {
+            await handleEditNotice();
+        }
+    }
+
+    useEffect(() => {
+        if (mode !== "edit") return
+        if (!noticeId) return;
+
+        fetchNoticeData();
+    }, [mode, noticeId])
 
     return (
         <div className="h-[100dvh] flex flex-col gap-4 px-8 py-6">
+            {/* 상호작용 메세지 */}
+            {toastMessage && (
+                <div className={`fixed right-40 top-15 z-50 rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-lg
+                    animate-slide-toast ${toastType === "success" ? "bg-emerald-500" : "bg-red-500"}`}>
+                    {toastMessage}
+                    <div className={`mt-2 animate-toast-timer h-1 w-full ${toastType === "error" ? "bg-red-300" : "bg-emerald-300"}`} />
+                </div>
+            )}
+
             {/* 상단 - 뒤로가기, 임시저장, 등록 */}
             <div className="flex justify-between">
                 <div className="flex items-center text-gray-600 group">
@@ -123,14 +287,15 @@ export default function NoticeInputPanel() {
                     </p>
                 </div>
                 <div className="flex gap-4 items-center">
-                    <button className="text-violet-600 border border-gray-300 rounded-md px-4 py-2 cursor-pointer">
-                        임시저장
-                    </button>
                     <button
                         onClick={handleSubmit}
+                        disabled={isProcessing}
                         className="text-white bg-violet-500 border border-violet-500 rounded-md px-4 py-2 cursor-pointer"
                     >
-                        등록하기
+                        {isProcessing
+                            ? mode === "edit" ? "수정중.." : "등록중..."
+                            : mode === "edit" ? "수정하기" : "등록하기"
+                        }
                     </button>
                 </div>
             </div>
@@ -236,16 +401,44 @@ export default function NoticeInputPanel() {
                                 파일선택
                             </label>
 
-                            {selectedFile.length > 0
-                                ? (<p className="text-sm text-gray-500">
-                                    첨부 된 파일: {selectedFile.map((file, index) => {
+                            {mode === "edit" && hasVisibleExistingAttachments && (
+                                <div className="flex flex-col gap-1">
+                                    <p className="font-medium text-gray-700">기존 첨부파일</p>
+
+                                    {visibleExistingAttachments.map((file) => (
+                                        <div
+                                            key={file.id}
+                                            className="flex items-center gap-2"
+                                        >
+                                            <span>{file.fileName}</span>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveExistingAttachment(file.id)}
+                                                className="text-xs text-red-500 hover:underline"
+                                            >
+                                                삭제
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {hasSelectedFiles
+                                && (<p className="text-sm text-gray-500">
+                                    새로 첨부할 파일: {selectedFile.map((file, index) => {
                                         return (
                                             <span key={`${file.name}-${index}`}> {file.name}</span>
                                         )
                                     })}
                                 </p>)
-                                : (<p className="text-sm text-gray-500">또는 파일을 드래그 해서 첨부하세요.</p>)
                             }
+
+                            {!hasVisibleExistingAttachments && !hasSelectedFiles && (
+                                <p className="text-sm text-gray-500">
+                                    또는 파일을 드래그 해서 첨부하세요
+                                </p>
+                            )}
 
                             <input
                                 id="input-file"
