@@ -1,8 +1,9 @@
 "use client"
 
-import { Home, MessageCircleMore, Newspaper } from "lucide-react"
+import { Home, MessageCircleMore, Newspaper, Shield } from "lucide-react"
 import { UserStatus } from "@/types/chat";
 import { useRouter } from "next/navigation"
+import { useAuthStore } from "@/stores/useAuthStore";
 
 export function getStatusRingColor(status: UserStatus) {
     switch (status) {
@@ -32,7 +33,7 @@ export function getStatusText(status: UserStatus) {
 }
 
 export default function SideBar() {
-
+    const authUser = useAuthStore((state) => state.user);
     const router = useRouter();
 
     return (
@@ -70,6 +71,17 @@ export default function SideBar() {
                     ">
                         <Newspaper />
                     </button>
+
+                    {/* 관리자 버튼 */}
+                    {authUser?.role === "ADMIN" && (
+                        <button
+                            onClick={() => router.push("/admin")}
+                            className="rounded-lg border-gray-300 w-[50px] h-[50px] cursor-pointer
+                            inline-flex justify-center items-center hover:bg-gray-400 mr-2"
+                        >
+                            <Shield />
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     // 타이핑 검사
     if (!body.email || !body.password) {
         return NextResponse.json(
-            { message: "이메일 또는 비밀번호를 입력해 주세요" },
+            { message: "이메일 또는 비밀번호를 입력해 주세요." },
             { status: 400 }
         );
     }
@@ -68,6 +68,7 @@ export async function POST(request: Request) {
                 profilePic: updatedUser.profilePic,
                 createdAt: updatedUser.createdAt,
                 companyId: updatedUser.companyId,
+                role: updatedUser.role,
             },
         },
         { status: 200 }

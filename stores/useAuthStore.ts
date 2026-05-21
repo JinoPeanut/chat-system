@@ -10,6 +10,7 @@ export type AuthUser = {
     createdAt: string,
     companyId: string,
     profilePic: string | null,
+    role: "USER" | "ADMIN",
 }
 
 type AuthStore = {

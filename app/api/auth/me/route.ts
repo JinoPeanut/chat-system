@@ -22,6 +22,7 @@ export async function GET() {
             profilePic: true,
             createdAt: true,
             companyId: true,
+            role: true,
         }
     });
 

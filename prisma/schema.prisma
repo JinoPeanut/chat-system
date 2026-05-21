@@ -13,6 +13,11 @@ enum UserStatus {
   AFK
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
 enum RoomType {
   personal
   group
@@ -53,6 +58,7 @@ model User {
   passwordHash  String
   createdAt   DateTime    @default(now())
   companyId   String
+  role        UserRole    @default(USER)
 
   messages    Message[]   @relation("MessageSender")
   chatRooms   ChatRoom[]  @relation("ChatMembers")

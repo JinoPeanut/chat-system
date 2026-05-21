@@ -1,6 +1,7 @@
 
 export type UserStatus = "online" | "offline" | "AFK";
 export type RoomType = "personal" | "group";
+export type UserRole = "USER" | "ADMIN";
 
 export type User = {
     id: string, // 유저 아이디
@@ -11,6 +12,7 @@ export type User = {
     profilePic: string | null, // 프로필 사진
     email: string,
     createdAt: string,
+    role: UserRole,
 }
 
 export type Message = {
