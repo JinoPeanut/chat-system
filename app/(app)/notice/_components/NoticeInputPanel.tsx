@@ -318,11 +318,11 @@ export default function NoticeInputPanel({ mode, noticeId }: NoticeInputPanelPro
                                 <span className={`w-full text-center rounded-full px-3 py-1 ${form.category ? getCategoryStyle(form.category) : ""}`}>
                                     {form.category ? getCategoryName(form.category) : "카테고리"}
                                 </span>
-                                {categoryOpen ? (<ChevronDown />) : (<ChevronRight />)}
+                                {categoryOpen ? (<ChevronRight />) : (<ChevronDown />)}
                             </div>
 
                             {categoryOpen && (
-                                <div className="absolute left-0 top-11 z-20 w-full rounded-2xl border border-gray-200 bg-white p-2 shadow-md">
+                                <div className="absolute left-0 top-full mt-2 z-20 w-full rounded-2xl border border-gray-200 bg-white p-2 shadow-md">
                                     {noticeCategoryField.map((option) => (
                                         <button
                                             key={option.key}
