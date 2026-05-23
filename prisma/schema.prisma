@@ -47,6 +47,12 @@ enum ProfileWork {
   house
 }
 
+enum AdminActivityType {
+  default
+  notice
+  leave
+}
+
 model User {
   id          String      @id
   name        String
@@ -68,6 +74,7 @@ model User {
   profile     Profile?     @relation("profileUser")
   schedule    Schedule[]
   company     Company      @relation(fields: [companyId], references: [id])
+  adminActivityLogs AdminActivityLog[]
 }
 
 model Message {
@@ -175,4 +182,20 @@ model Company {
   inviteCode String   @unique
 
   users     User[]
+}
+
+model AdminActivityLog {
+  id        String            @id @default(uuid())
+  adminId   String
+  companyId String
+  type      AdminActivityType @default(default)
+  message   String
+  targetId  String?
+  targetType String?
+  createdAt DateTime          @default(now())
+
+  admin     User              @relation(fields: [adminId], references: [id])
+
+  @@index([companyId])
+  @@index([createdAt])
 }
