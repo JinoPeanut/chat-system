@@ -1,36 +1,8 @@
 "use client"
 
 import { Home, MessageCircleMore, Newspaper, Shield } from "lucide-react"
-import { UserStatus } from "@/types/chat";
 import { useRouter } from "next/navigation"
 import { useAuthStore } from "@/stores/useAuthStore";
-
-export function getStatusRingColor(status: UserStatus) {
-    switch (status) {
-        case "online":
-            return "ring-green-400";
-        case "offline":
-            return "ring-gray-400";
-        case "AFK":
-            return "ring-yellow-400";
-    }
-}
-
-export function getStatusColor(status: UserStatus) {
-    switch (status) {
-        case "online": return "bg-green-400"
-        case "offline": return "bg-gray-400"
-        case "AFK": return "bg-yellow-400"
-    }
-}
-
-export function getStatusText(status: UserStatus) {
-    switch (status) {
-        case "online": return "온라인"
-        case "offline": return "오프라인"
-        case "AFK": return "자리비움"
-    }
-}
 
 export default function SideBar() {
     const authUser = useAuthStore((state) => state.user);

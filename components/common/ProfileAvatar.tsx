@@ -1,5 +1,5 @@
 import { UserStatus } from "@/types/chat"
-import { getStatusRingColor } from "../chat/SideBar"
+import { getStatusRingColor } from "@/utils/statusUtils";
 import { User } from "lucide-react";
 
 type ProfileAvatarProps = {

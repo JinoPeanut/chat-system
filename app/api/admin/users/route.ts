@@ -29,6 +29,8 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
+    const page = Math.max(1, Number(searchParams.get("page") ?? 1));
+    const limit = Math.min(50, Math.max(1, Number(searchParams.get("limit") ?? 7)));
     const department = searchParams.get("department")?.trim();
     const position = searchParams.get("position")?.trim();
     const status = searchParams.get("status")?.trim();
@@ -63,6 +65,10 @@ export async function GET(request: Request) {
         ]
     }
 
+    const total = await prisma.user.count({
+        where,
+    });
+
     const users = await prisma.user.findMany({
         where,
         select: {
@@ -75,8 +81,19 @@ export async function GET(request: Request) {
             profilePic: true,
             createdAt: true,
             role: true,
-        }
+        },
+        orderBy: [
+            { department: "asc" },
+            { name: "asc" },
+        ],
+        skip: (page - 1) * limit,
+        take: limit,
     })
 
-    return NextResponse.json(users);
+    return NextResponse.json({
+        users,
+        page,
+        limit,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+    });
 }
