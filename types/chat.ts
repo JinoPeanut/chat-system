@@ -13,6 +13,7 @@ export type User = {
     email: string,
     createdAt: string,
     role: UserRole,
+    profile?: { tel: string, statusMsg: string, bestWorker: boolean } | null,
 }
 
 export type Message = {

@@ -327,6 +327,9 @@ export default function AdminUserPage() {
                 <AdminUserEditModal
                     user={selectUser}
                     onClose={() => setIsEditModalOpen(false)}
+                    departments={departments}
+                    positionOptions={positionOptions}
+                    onSuccess={fetchUserData}
                 />
             )}
         </div>

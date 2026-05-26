@@ -1,25 +1,30 @@
 "use client"
 
-import { HomeResponse, Notice, NOTICE_TABS, NoticeScope } from "@/types/notice";
+import { Notice, NOTICE_TABS, NoticeScope } from "@/types/notice";
 import { getCategoryName } from "@/utils/noticeUtils";
 import { useEffect, useState } from "react";
 
 export default function NoticePanel() {
+    const LIMIT = 5;
     const [activeTab, setActiveTab] = useState<NoticeScope>("all");
     const [notices, setNotices] = useState<Notice[]>([]);
 
     const filteredNotices = notices
         .filter((notice) => activeTab === "all" || notice.category === activeTab);
 
-    const fetchHomeData = async () => {
-        const res = await fetch("/api/home");
-        const data: HomeResponse = await res.json();
+    const fetchNoticeData = async () => {
+        const params = new URLSearchParams({
+            limit: String(LIMIT),
+        });
 
-        setNotices(data.notices);
+        const res = await fetch(`/api/home/notice?${params.toString()}`);
+        const data = await res.json();
+
+        setNotices(data);
     };
 
     useEffect(() => {
-        fetchHomeData();
+        fetchNoticeData();
     }, [])
 
     return (

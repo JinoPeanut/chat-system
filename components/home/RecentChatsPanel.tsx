@@ -2,7 +2,6 @@
 
 import { useAuthStore } from "@/stores/useAuthStore";
 import { Chat } from "@/types/chat"
-import { HomeResponse } from "@/types/notice";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -22,6 +21,7 @@ export default function RecentChatsPanel() {
                 roomId: room.id,
                 partnerId: partner?.id,
                 partnerName: partner?.name ?? "-",
+                partnerProfilePic: partner?.profilePic ?? null,
                 lastContent: lastMessage?.content ?? "메세지가 없습니다",
                 lastTime: lastMessage
                     ? new Date(lastMessage.timeAt).toLocaleTimeString("ko-KR", {
@@ -36,14 +36,14 @@ export default function RecentChatsPanel() {
         .slice(0, 3);
 
     useEffect(() => {
-        const fetchHomeData = async () => {
-            const res = await fetch("/api/home");
-            const data: HomeResponse = await res.json();
+        const fetchChatData = async () => {
+            const res = await fetch("/api/home/chat");
+            const data = await res.json();
 
-            setChatRooms(data.chatRooms);
+            setChatRooms(data);
         }
 
-        fetchHomeData();
+        fetchChatData();
     }, [])
 
     return (

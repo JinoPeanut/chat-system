@@ -2,7 +2,6 @@
 
 import { use, useEffect, useRef, useState } from "react"
 import { Chat } from "@/types/chat"
-import { getStatusColor } from "@/components/chat/SideBar";
 import MessageList from "./_components/MessageList";
 import MessageInput from "./_components/MessageInput";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -10,6 +9,7 @@ import { User2 } from "lucide-react";
 import { socket } from "@/lib/socket";
 import { useRouter } from "next/navigation";
 import { Department } from "@/types/department";
+import { getStatusColor } from "@/utils/statusUtils";
 
 function getUserStatus(status: string) {
     if (status === "online") return "온라인";

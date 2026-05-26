@@ -1,11 +1,11 @@
 "use client";
 
-import { getStatusColor, getStatusRingColor, getStatusText } from "@/components/chat/SideBar";
 import ProfileAvatar from "@/components/common/ProfileAvatar";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { Chat } from "@/types/chat";
 import { Department } from "@/types/department";
 import { HomeResponse } from "@/types/notice";
+import { getStatusColor, getStatusText } from "@/utils/statusUtils";
 import { ChevronRight, MessageCircle, Settings, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";

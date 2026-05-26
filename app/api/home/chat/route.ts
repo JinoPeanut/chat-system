@@ -25,21 +25,36 @@ export async function GET() {
         );
     }
 
-    const chatRooms = await prisma.chatRoom.findMany({
-        include: {
-            members: true,
-            messages: {
-                include: {
-                    sender: true,
-                },
-                orderBy: {
-                    timeAt: "asc",
-                },
-            },
+    const chat = await prisma.chatRoom.findMany({
+        where: {
+            members: {
+                some: {
+                    id: userId,
+                }
+            }
         },
-    });
+        select: {
+            id: true,
+            members: {
+                select: {
+                    id: true,
+                    name: true,
+                    profilePic: true,
+                }
+            },
+            messages: {
+                orderBy: {
+                    timeAt: "desc",
+                },
+                take: 1,
+                select: {
+                    id: true,
+                    content: true,
+                    timeAt: true,
+                }
+            },
+        }
+    })
 
-    return NextResponse.json({
-        chatRooms
-    });
+    return NextResponse.json(chat);
 }

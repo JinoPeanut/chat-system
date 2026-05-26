@@ -4,7 +4,6 @@ import { Settings, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Profile, ProfileForm } from "@/types/profile";
 import { useAuthStore } from "@/stores/useAuthStore";
-import { getStatusRingColor } from "../../chat/SideBar";
 import ProfileSetting from "./ProfileSetting";
 import ProfileAvatar from "@/components/common/ProfileAvatar";
 
