@@ -7,19 +7,30 @@ import LeaveHistoryModal from "./LeaveHistoryModal";
 import LeaveSummaryCard from "./LeaveSummaryCard";
 import { getLeaveColor } from "../../../utils/leaveUtils";
 import useLeavePanel from "@/hooks/leave/useLeavePanel";
+import { LeaveBalance, LeaveHistory } from "@/types/leave";
 
-export default function LeavePanel() {
+type LeavePanelProps = {
+    leave: {
+        leaveBalance: LeaveBalance,
+        leaveHistory: LeaveHistory[],
+    }
+    onRefresh: () => Promise<void>,
+}
+
+export default function LeavePanel({ leave, onRefresh }: LeavePanelProps) {
 
     const {
         myUserName,
         isOpen,
         isApplyOpen,
         applyForm,
-        myLeaveBalance,
-        myLeaveHistory,
+        leaveBalance,
+        leaveHistory,
         remainDays,
         remainHours,
         usedDays,
+        useHours,
+        totalDays,
         leavePercent,
         openModal,
         closeModal,
@@ -29,8 +40,9 @@ export default function LeavePanel() {
         handleChangeLeaveType,
         handleChangeReason,
         handleSubmitApply,
-        handleApproveLeave,
-    } = useLeavePanel();
+        errorMessage,
+        isProcessing,
+    } = useLeavePanel({ leave, onRefresh });
 
 
     useEffect(() => {
@@ -88,14 +100,14 @@ export default function LeavePanel() {
                     LucideIcon={ListChecks}
                     title="사용 연차"
                     days={usedDays}
-                    hours={myLeaveBalance?.useHours}
+                    hours={useHours}
                 />
 
                 {/* 총 연차 */}
                 <LeaveSummaryCard
                     LucideIcon={PackageOpen}
                     title="총 연차"
-                    days={myLeaveBalance ? myLeaveBalance?.totalDays : 0}
+                    days={totalDays}
                 />
             </div>
 
@@ -138,7 +150,7 @@ export default function LeavePanel() {
             <LeaveHistoryModal
                 isOpen={isOpen}
                 closeModal={closeModal}
-                myLeaveHistory={myLeaveHistory}
+                myLeaveHistory={leaveHistory}
                 myUserName={myUserName}
             />
 
@@ -151,6 +163,8 @@ export default function LeavePanel() {
                 onChangeLeaveType={handleChangeLeaveType}
                 onChangeReason={handleChangeReason}
                 handleSubmitApply={handleSubmitApply}
+                isProcessing={isProcessing}
+                errorMessage={errorMessage}
             />
         </div>
     )

@@ -2,30 +2,17 @@
 
 import { Notice, NOTICE_TABS, NoticeScope } from "@/types/notice";
 import { getCategoryName } from "@/utils/noticeUtils";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-export default function NoticePanel() {
-    const LIMIT = 5;
+type NoticePanelProps = {
+    notices: Notice[],
+}
+
+export default function NoticePanel({ notices }: NoticePanelProps) {
     const [activeTab, setActiveTab] = useState<NoticeScope>("all");
-    const [notices, setNotices] = useState<Notice[]>([]);
 
     const filteredNotices = notices
         .filter((notice) => activeTab === "all" || notice.category === activeTab);
-
-    const fetchNoticeData = async () => {
-        const params = new URLSearchParams({
-            limit: String(LIMIT),
-        });
-
-        const res = await fetch(`/api/home/notice?${params.toString()}`);
-        const data = await res.json();
-
-        setNotices(data);
-    };
-
-    useEffect(() => {
-        fetchNoticeData();
-    }, [])
 
     return (
         <div className="border border-gray-200 rounded-md

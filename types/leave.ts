@@ -9,16 +9,17 @@ export type ApplyForm = {
 
 // 남은 연차 보여주기
 export type LeaveBalance = {
-    userId: string,
     totalDays: number,
     usedDays: number,
     useHours: number,
+    remainDays: number,
+    remainHours: number;
+    leavePercent: number;
 }
 
 // 연차 사용시점에 대한 자세한 정보
 export type LeaveHistory = {
     id: string,
-    userId: string,
     leaveDate: string,
     usedDays: number,
     usedHours: number,
@@ -26,9 +27,4 @@ export type LeaveHistory = {
     reason?: string,
     status: LeaveStatus,
     createdAt: string,
-}
-
-export type LeaveResponse = {
-    leaveBalance: LeaveBalance[],
-    leaveHistory: LeaveHistory[],
 }

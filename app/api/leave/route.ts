@@ -1,58 +1,50 @@
 import { prisma } from "@/lib/prisma";
-import { calculateAnnualLeave } from "@/utils/leaveUtils";
+import { LeaveType } from "@/types/leave";
+import { getUsageByLeaveType } from "@/utils/leaveUtils";
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-export async function GET() {
-    const users = await prisma.user.findMany({
-        select: {
-            id: true,
-            createdAt: true,
-        },
-    });
-
-    for (const user of users) {
-        const totalDays = calculateAnnualLeave(user.createdAt.toISOString());
-
-        await prisma.leaveBalance.upsert({
-            where: { userId: user.id },
-            update: { totalDays },
-            create: {
-                id: crypto.randomUUID(),
-                userId: user.id,
-                totalDays,
-                usedDays: 0,
-                useHours: 0,
-            },
-        });
-    }
-
-    const leaveBalance = await prisma.leaveBalance.findMany();
-    const leaveHistory = await prisma.leaveHistory.findMany();
-
-    return NextResponse.json({ leaveBalance, leaveHistory });
-}
+const LEAVE_TYPES = ["annual", "half_am", "half_pm"] as const;
 
 export async function POST(request: Request) {
+    const cookieStore = await cookies();
+    const userId = cookieStore.get("auth_user_id")?.value;
+
+    if (!userId) {
+        return NextResponse.json(
+            { message: "로그인이 필요합니다." },
+            { status: 401 }
+        );
+    }
+
     const body = await request.json();
 
-    if (!body.userId || !body.leaveDate || !body.leaveType) {
+    if (!body.leaveDate || !body.leaveType) {
         return NextResponse.json(
             { message: "필수 값이 없습니다." },
             { status: 400 }
         );
     }
 
+    if (!LEAVE_TYPES.includes(body.leaveType)) {
+        return NextResponse.json(
+            { message: "올바르지 않은 휴가 유형입니다." },
+            { status: 400 },
+        )
+    }
+
+    const { usedDays, usedHours } = getUsageByLeaveType(body.leaveType as LeaveType);
+
     const leave = await prisma.leaveHistory.create({
         data: {
-            id: body.id,
-            userId: body.userId,
+            id: crypto.randomUUID(),
+            userId,
             leaveDate: body.leaveDate,
             leaveType: body.leaveType,
-            usedDays: body.usedDays,
-            usedHours: body.usedHours,
-            status: body.status,
+            usedDays,
+            usedHours,
+            status: "pending",
             reason: body.reason,
-            createdAt: new Date(body.createdAt),
         },
     });
 

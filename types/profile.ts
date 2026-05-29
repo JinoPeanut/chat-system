@@ -1,4 +1,3 @@
-import { User } from "@prisma/client"
 
 export type ProfileWork = "office" | "house"
 
@@ -9,10 +8,8 @@ export type ProfileForm = {
     profilePic: string | null,
 }
 
-export type Profile = {
-    userId: string,
-    profileUser: User,
-    statusMsg?: string,
+export type HomeProfile = {
+    statusMsg: string | null,
     statusWork: ProfileWork,
     bestWorker: boolean,
     tel: string,

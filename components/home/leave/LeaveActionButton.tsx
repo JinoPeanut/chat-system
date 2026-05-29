@@ -3,16 +3,19 @@ type LeaveActionButtonProps = {
     onClick?: () => void,
     className?: string,
     name?: string,
+    processingName?: string,
+    isProcessing?: boolean,
 }
 
-export default function LeaveActionButton({ BtnType = "button", onClick, className, name }: LeaveActionButtonProps) {
+export default function LeaveActionButton({ BtnType = "button", onClick, className, name, processingName, isProcessing }: LeaveActionButtonProps) {
     return (
         <button
             type={BtnType}
             onClick={onClick}
-            className={`rounded-md px-3 py-2 text-sm cursor-pointer ${className}`}
+            disabled={isProcessing}
+            className={`rounded-md px-3 py-2 text-sm ${isProcessing ? "cursor-not-allowed opacity-60" : "cursor-pointer"} ${className}`}
         >
-            {name}
+            {isProcessing ? processingName : name}
         </button>
     )
 }

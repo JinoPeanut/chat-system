@@ -1,9 +1,12 @@
 
-export type AttendanceType = {
-    id: string,
-    userId: string,
-    date: string,
-    checkInAt: number | null,
-    checkOutAt: number | null,
-    workMinutes: number | null,
+export type HomeAttendance = {
+    today: {
+        date: string,
+        checkInAt: number | null,
+        checkOutAt: number | null,
+        workMinutes: number | null,
+    } | null,
+    workMinutes: number,
+    leftMinutes: number,
+    workPercent: number,
 }

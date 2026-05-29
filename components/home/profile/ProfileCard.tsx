@@ -1,11 +1,16 @@
 "use client"
 
-import { Settings, User } from "lucide-react";
+import { Settings } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Profile, ProfileForm } from "@/types/profile";
+import { HomeProfile, ProfileForm } from "@/types/profile";
 import { useAuthStore } from "@/stores/useAuthStore";
 import ProfileSetting from "./ProfileSetting";
 import ProfileAvatar from "@/components/common/ProfileAvatar";
+
+type ProfileCardProps = {
+    profile: HomeProfile | null;
+    onRefresh: () => Promise<void>;
+}
 
 const getStatusWork = (work: string) => {
     if (work === "office") return "사무실";
@@ -13,10 +18,10 @@ const getStatusWork = (work: string) => {
     return work;
 }
 
-export default function ProfileCard() {
+export default function ProfileCard({ profile, onRefresh }: ProfileCardProps) {
     const authUser = useAuthStore((state) => state.user);
     const setUser = useAuthStore((state) => state.setUser);
-    const [profile, setProfile] = useState<Profile | null>(null);
+
     const [isOpen, setIsOpen] = useState(false);
 
     const [form, setForm] = useState<ProfileForm>({
@@ -29,57 +34,61 @@ export default function ProfileCard() {
     const [submitError, setSubmitError] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    useEffect(() => {
+        setForm({
+            statusMsg: profile?.statusMsg ?? "",
+            statusWork: profile?.statusWork ?? "office",
+            tel: profile?.tel ?? "",
+            profilePic: authUser?.profilePic ?? null,
+        })
+    }, [profile, authUser?.profilePic])
+
     const isValidTel = (tel: string) => {
         if (!tel) return true;
         return /^010-\d{4}-\d{4}$/.test(tel);
     }
 
-    const fetchProfileData = async () => {
-        const res = await fetch("/api/profile/me");
-        if (!res.ok) return;
-
-        const data: Profile | null = await res.json();
-        setProfile(data);
-    }
-
     const handleUpdateProfile = async () => {
         if (isSubmitting) return;
+
         if (!isValidTel(form.tel)) {
             setSubmitError("전화번호 형식이 올바르지 않습니다");
             return;
         }
         setSubmitError("");
-        setIsSubmitting(true);
 
-        const res = await fetch("/api/profile/me", {
-            method: "PATCH",
-            headers: { "Content-type": "application/json" },
-            body: JSON.stringify(form),
-        });
+        try {
+            setIsSubmitting(true);
 
-        if (!res.ok) {
-            if (res.status === 401) {
-                setSubmitError("로그인이 필요합니다");
-            } else if (res.status === 400) {
-                setSubmitError("근무 상태를 알 수 없습니다");
-            } else {
-                setSubmitError("프로필 저장에 실패했습니다");
+            const res = await fetch("/api/profile/me", {
+                method: "PATCH",
+                headers: { "Content-type": "application/json" },
+                body: JSON.stringify(form),
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                setSubmitError(data.message ?? "프로필을 수정할 수 없습니다.");
+                return;
             }
-            return false
+
+            const data = await res.json();
+
+            if (authUser) {
+                setUser({
+                    ...authUser,
+                    profilePic: data.user.profilePic,
+                })
+            }
+
+            await onRefresh();
+
+            closeModal();
+        } catch (error) {
+            setSubmitError("서버에 연결할 수 없습니다.");
+        } finally {
+            setIsSubmitting(false);
         }
-
-        const data = await res.json();
-
-        setProfile(data.profile);
-
-        if (authUser) {
-            setUser({
-                ...authUser,
-                profilePic: data.user.profilePic,
-            })
-        }
-
-        closeModal();
     }
 
     const handleChange = <k extends keyof ProfileForm>(
@@ -139,19 +148,6 @@ export default function ProfileCard() {
         const formattedTel = formatTel(e.target.value);
         handleChange("tel", formattedTel);
     }
-
-    useEffect(() => {
-        fetchProfileData();
-    }, [])
-
-    useEffect(() => {
-        setForm({
-            statusMsg: profile?.statusMsg ?? "",
-            statusWork: profile?.statusWork ?? "office",
-            tel: profile?.tel ?? "",
-            profilePic: authUser?.profilePic ?? null,
-        })
-    }, [profile, authUser?.profilePic])
 
     return (
         <div className="

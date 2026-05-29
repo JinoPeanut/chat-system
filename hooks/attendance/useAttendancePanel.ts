@@ -1,8 +1,13 @@
 import { useAuthStore } from "@/stores/useAuthStore";
-import { AttendanceType } from "@/types/attendance";
-import { useEffect, useState } from "react";
+import { HomeAttendance } from "@/types/attendance";
+import { useState } from "react";
 
-export default function useAttendancePanel() {
+type useAttendancePanelProps = {
+    attendance: HomeAttendance,
+    onRefresh: () => Promise<void>,
+}
+
+export default function useAttendancePanel({ attendance, onRefresh }: useAttendancePanelProps) {
     const authUser = useAuthStore((state) => state.user);
 
     function formatKoreanTime(now: Date) {
@@ -36,29 +41,17 @@ export default function useAttendancePanel() {
     }
 
     const [currentTime, setCurrentTime] = useState<Date | null>(null);
-    const [attendance, setAttendance] = useState<AttendanceType[]>([]);
 
     const todayKey = new Date().toISOString().slice(0, 10);
     const myUserId = authUser?.id;
 
-    const fetchAttendance = async () => {
-        const res = await fetch("/api/attendance");
-        const data: AttendanceType[] = await res.json();
-        setAttendance(data);
-    };
+    const todayAttendance = attendance?.today;
+    const workMinutes = attendance?.workMinutes ?? 0;
+    const leftMinutes = attendance?.leftMinutes ?? 0;
+    const workPercent = attendance?.workPercent ?? 0;
 
-    // 내 기록인지, 오늘날짜가 맞는지 확인
-    const todayAttendance = attendance.find(
-        (r) => r.userId === myUserId && r.date === todayKey
-    );
     const checkInText = formatTimeFromMinutes(todayAttendance?.checkInAt ?? null);
     const checkOutText = formatTimeFromMinutes(todayAttendance?.checkOutAt ?? null);
-
-    const workTime = 2400;
-    const workMinutesText = todayAttendance?.workMinutes ?? 0;
-    const leftMinutes = workTime - workMinutesText;
-
-    const workPercent = Math.min(100, (workMinutesText / workTime) * 100);
 
     const handleCheckIn = async () => {
         if (todayAttendance?.checkInAt || !myUserId) return;
@@ -70,7 +63,6 @@ export default function useAttendancePanel() {
             method: "POST",
             headers: { "Content-type": "application/json" },
             body: JSON.stringify({
-                userId: myUserId,
                 date: todayKey,
                 checkInAt,
                 checkOutAt: null,
@@ -80,7 +72,7 @@ export default function useAttendancePanel() {
 
         if (!res.ok) return;
 
-        await fetchAttendance();
+        await onRefresh();
     }
 
     const handleCheckOut = async () => {
@@ -94,7 +86,6 @@ export default function useAttendancePanel() {
             method: "PATCH",
             headers: { "Content-type": "application/json" },
             body: JSON.stringify({
-                userId: myUserId,
                 date: todayKey,
                 checkOutAt,
                 workMinutes,
@@ -103,12 +94,8 @@ export default function useAttendancePanel() {
 
         if (!res.ok) return;
 
-        await fetchAttendance();
+        await onRefresh();
     }
-
-    useEffect(() => {
-        fetchAttendance();
-    }, [])
 
     return {
         formatKoreanTime,
@@ -116,11 +103,11 @@ export default function useAttendancePanel() {
         currentTime,
         setCurrentTime,
         todayAttendance,
-        checkInText,
-        checkOutText,
-        workMinutesText,
+        workMinutes,
         leftMinutes,
         workPercent,
+        checkInText,
+        checkOutText,
         handleCheckIn,
         handleCheckOut,
     }

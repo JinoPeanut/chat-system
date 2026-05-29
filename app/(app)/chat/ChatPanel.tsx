@@ -4,7 +4,7 @@ import ProfileAvatar from "@/components/common/ProfileAvatar";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { Chat } from "@/types/chat";
 import { Department } from "@/types/department";
-import { HomeResponse } from "@/types/notice";
+import { HomeResponse } from "@/types/home";
 import { getStatusColor, getStatusText } from "@/utils/statusUtils";
 import { ChevronRight, MessageCircle, Settings, User } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -67,7 +67,7 @@ export default function ChatPanel() {
         // 채팅창 정보가 필요해서 추가
         const homeRes = await fetch("/api/home");
         const homeData: HomeResponse = await homeRes.json();
-        setChatRooms(homeData.chatRooms);
+        setChatRooms(homeData.recentChat);
     };
 
     useEffect(() => {

@@ -3,28 +3,36 @@
 import { useEffect } from "react";
 import { ArrowDown } from "lucide-react";
 import useAttendancePanel from "@/hooks/attendance/useAttendancePanel";
+import { HomeAttendance } from "@/types/attendance";
 
-export default function AttendancePanel() {
+type AttendancePanelProps = {
+    attendance: HomeAttendance,
+    onRefresh: () => Promise<void>,
+}
+
+export default function AttendancePanel({ attendance, onRefresh }: AttendancePanelProps) {
     const {
         formatKoreanTime,
         formatMinutes,
         currentTime,
         setCurrentTime,
         todayAttendance,
-        checkInText,
-        checkOutText,
-        workMinutesText,
+        workMinutes,
         leftMinutes,
         workPercent,
+        checkInText,
+        checkOutText,
         handleCheckIn,
         handleCheckOut,
-    } = useAttendancePanel();
+    } = useAttendancePanel({ attendance, onRefresh });
 
     // 1분마다 시간 업데이트
     useEffect(() => {
+        setCurrentTime(new Date());
+
         const timer = setInterval(() => setCurrentTime(new Date()), 60_000);
         return () => clearInterval(timer);
-    }, [])
+    }, [setCurrentTime])
 
     return (
         <div
@@ -58,7 +66,7 @@ export default function AttendancePanel() {
 
             <div className="flex mt-8 gap-2">
                 <p className="text-sm font-bold">이번주 근무시간</p>
-                <p className="text-sm text-green-400 font-bold">{formatMinutes(workMinutesText)}</p>
+                <p className="text-sm text-green-400 font-bold">{formatMinutes(workMinutes)}</p>
             </div>
 
             <p className="text-xs text-gray-400">

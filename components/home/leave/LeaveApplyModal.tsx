@@ -8,12 +8,14 @@ type LeaveApplyModalProps = {
     onChangeLeaveDate: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onChangeLeaveType: (e: React.ChangeEvent<HTMLSelectElement>) => void;
     onChangeReason: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-    handleSubmitApply: () => void;
+    handleSubmitApply: () => Promise<void>;
+    isProcessing: boolean,
+    errorMessage: string,
 }
 
 export default function LeaveApplyModal(
     { isApplyOpen, closeApplyModal, applyForm, onChangeLeaveDate, onChangeLeaveType,
-        onChangeReason, handleSubmitApply }: LeaveApplyModalProps) {
+        onChangeReason, handleSubmitApply, isProcessing, errorMessage }: LeaveApplyModalProps) {
     return (
         <>
             {isApplyOpen &&
@@ -24,6 +26,11 @@ export default function LeaveApplyModal(
                         className="bg-white p-4 rounded-md w-full max-w-md"
                     >
                         <h3 className="text-base font-bold mb-4">연차 신청</h3>
+                        {errorMessage && (
+                            <p className="text-sm text-red-500">
+                                {errorMessage}
+                            </p>
+                        )}
 
                         <div className="space-y-4">
 
@@ -76,6 +83,8 @@ export default function LeaveApplyModal(
                                 onClick={handleSubmitApply}
                                 className="bg-green-500 text-white hover:bg-green-400"
                                 name="신청하기"
+                                processingName="신청중.."
+                                isProcessing={isProcessing}
                             />
                         </div>
                     </div>

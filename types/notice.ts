@@ -1,4 +1,4 @@
-import { Chat, User } from "./chat";
+import { User } from "./chat";
 
 export type NoticeCategory = "notice" | "event" | "update" | "etc";
 export type NoticeScope = "all" | "notice" | "event" | "update" | "etc";
@@ -34,11 +34,6 @@ export type Notice = {
     isPinned?: boolean;         // 상단 고정 필요하면
     author?: User;
     attachments?: NoticeAttachment[];
-};
-
-export type HomeResponse = {
-    chatRooms: Chat[];
-    notices: Notice[];
 };
 
 export const NOTICE: NoticeState = {

@@ -1,15 +1,21 @@
-import { getUsageByLeaveType } from "@/utils/leaveUtils";
-import { ApplyForm, LeaveBalance, LeaveHistory, LeaveResponse } from "@/types/leave";
-import { useEffect, useState } from "react";
+import { ApplyForm, LeaveBalance, LeaveHistory } from "@/types/leave";
+import { useState } from "react";
 import { useAuthStore } from "@/stores/useAuthStore";
 
-export default function useLeavePanel() {
+type useLeavePanelProps = {
+    leave: {
+        leaveBalance: LeaveBalance,
+        leaveHistory: LeaveHistory[],
+    }
+    onRefresh: () => Promise<void>,
+}
+
+export default function useLeavePanel({ leave, onRefresh }: useLeavePanelProps) {
     const authUser = useAuthStore((state) => state.user);
-    const myUserId = authUser?.id;
     const myUserName = authUser?.name;
 
-    const [leaveBalance, setLeaveBalance] = useState<LeaveBalance[]>([]);
-    const [leaveHistory, setLeaveHistory] = useState<LeaveHistory[]>([]);
+    const [errorMessage, setErrorMessage] = useState("");
+    const [isProcessing, setIsProcessing] = useState(false);
 
     // 내역보기 모달 상태값
     const [isOpen, setIsOpen] = useState(false);
@@ -23,28 +29,27 @@ export default function useLeavePanel() {
         reason: "",
     });
 
-    const fetchLeaveData = async () => {
-        const res = await fetch("/api/leave");
-        const data: LeaveResponse = await res.json();
-        setLeaveBalance(data.leaveBalance);
-        setLeaveHistory(data.leaveHistory);
-    };
+    const leaveBalance = leave.leaveBalance;
+    const leaveHistory = leave.leaveHistory;
 
-    const myLeaveBalance = leaveBalance.find((u) => u.userId === myUserId);
-    const myLeaveHistory = leaveHistory.filter((h) => h.userId === myUserId);
-
-    const remainDays = myLeaveBalance ? myLeaveBalance?.totalDays - myLeaveBalance?.usedDays : 0;
-    const remainHours = myLeaveBalance ? 8 - myLeaveBalance.useHours : 0;
-    const usedDays = myLeaveBalance ? myLeaveBalance.usedDays : 0;
-    const leavePercent = myLeaveBalance
-        ? Math.min(100, (myLeaveBalance?.usedDays / myLeaveBalance.totalDays) * 100)
-        : 0;
+    const remainDays = leaveBalance?.remainDays ?? 0;
+    const remainHours = leaveBalance?.remainHours ?? 0;
+    const usedDays = leaveBalance?.usedDays ?? 0;
+    const useHours = leaveBalance?.useHours ?? 0;
+    const totalDays = leaveBalance?.totalDays ?? 0;
+    const leavePercent = leaveBalance?.leavePercent ?? 0;
 
     const openModal = () => setIsOpen(true);
     const closeModal = () => setIsOpen(false);
 
-    const openApplyModal = () => setIsApplyOpen(true);
-    const closeApplyModal = () => setIsApplyOpen(false);
+    const openApplyModal = () => {
+        setErrorMessage("");
+        setIsApplyOpen(true)
+    };
+    const closeApplyModal = () => {
+        setErrorMessage("");
+        setIsApplyOpen(false);
+    };
 
     function handleChangeLeaveDate(e: React.ChangeEvent<HTMLInputElement>) {
         setApplyForm((prev) => ({ ...prev, leaveDate: e.target.value }));
@@ -61,40 +66,52 @@ export default function useLeavePanel() {
         setApplyForm((prev) => ({ ...prev, reason: e.target.value }));
     }
 
+    // Leave 데이터 만들기
     const handleSubmitApply = async () => {
-        if (!applyForm.leaveDate) return;
+        if (isProcessing) return;
+        if (!applyForm.leaveDate) {
+            setErrorMessage("사용 날짜를 선택해 주세요.");
+            return;
+        }
 
-        const { usedDays, usedHours } = getUsageByLeaveType(applyForm.leaveType);
+        setErrorMessage("");
 
-        const res = await fetch("/api/leave", {
-            method: "POST",
-            headers: { "Content-type": "application/json" },
-            body: JSON.stringify({
-                id: crypto.randomUUID(),
-                userId: myUserId,
-                leaveDate: applyForm.leaveDate,
-                leaveType: applyForm.leaveType,
-                usedDays,
-                usedHours,
-                status: "pending",
-                reason: applyForm.reason.trim() || undefined,
-                createdAt: new Date().toISOString(),
+        try {
+            setIsProcessing(true);
+
+            const res = await fetch("/api/leave", {
+                method: "POST",
+                headers: { "Content-type": "application/json" },
+                body: JSON.stringify({
+                    leaveDate: applyForm.leaveDate,
+                    leaveType: applyForm.leaveType,
+                    reason: applyForm.reason.trim() || undefined,
+                })
             })
-        })
 
-        if (!res.ok) return;
+            if (!res.ok) {
+                const data = await res.json();
+                setErrorMessage(data.message ?? "연차를 신청할 수 없습니다");
+                return;
+            }
 
-        await fetchLeaveData();
+            await onRefresh();
 
-        setApplyForm({
-            leaveDate: "",
-            leaveType: "annual",
-            reason: "",
-        });
+            setApplyForm({
+                leaveDate: "",
+                leaveType: "annual",
+                reason: "",
+            });
 
-        closeApplyModal();
+            closeApplyModal();
+        } catch (error) {
+            setErrorMessage("서버에 연결할 수 없습니다");
+        } finally {
+            setIsProcessing(false);
+        }
     }
 
+    // Leave 데이터 수정
     const handleApproveLeave = async (leaveId: string) => {
         const res = await fetch("/api/leave/approve", {
             method: "PATCH",
@@ -106,24 +123,21 @@ export default function useLeavePanel() {
 
         if (!res.ok) return;
 
-        await fetchLeaveData();
+        await onRefresh();
     };
-
-
-    useEffect(() => {
-        fetchLeaveData();
-    }, []);
 
     return {
         myUserName,
         isOpen,
         isApplyOpen,
         applyForm,
-        myLeaveBalance,
-        myLeaveHistory,
+        leaveBalance,
+        leaveHistory,
         remainDays,
         remainHours,
         usedDays,
+        useHours,
+        totalDays,
         leavePercent,
         openModal,
         closeModal,
@@ -134,5 +148,7 @@ export default function useLeavePanel() {
         handleChangeReason,
         handleSubmitApply,
         handleApproveLeave,
+        errorMessage,
+        isProcessing,
     }
 }

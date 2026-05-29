@@ -3,20 +3,19 @@
 import { useAuthStore } from "@/stores/useAuthStore";
 import { Chat } from "@/types/chat"
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
-export default function RecentChatsPanel() {
-    const [chatRooms, setChatRooms] = useState<Chat[]>([]);
+type RecentChatsPanelProps = {
+    recentChat: Chat[],
+}
+
+export default function RecentChatsPanel({ recentChat }: RecentChatsPanelProps) {
     const authUser = useAuthStore((state) => state.user);
-
     const myUserId = authUser?.id;
 
-    const recentChats = chatRooms
-        // 내가 있는 대화방만 필터링
-        .filter((room) => room.members?.some((m) => m.id === myUserId))
+    const recentChats = recentChat
         .map((room) => {
             const partner = room.members?.find((m) => m.id !== myUserId);
-            const lastMessage = room.messages?.[room.messages.length - 1];
+            const lastMessage = room.messages?.[0];
             return {
                 roomId: room.id,
                 partnerId: partner?.id,
@@ -30,21 +29,11 @@ export default function RecentChatsPanel() {
                         hour12: false,
                     })
                     : "-",
+                lastTimeStamp: lastMessage ? new Date(lastMessage.timeAt).getTime() : 0,
             }
         })
-        .sort((a, b) => (a.lastTime < b.lastTime ? 1 : -1))
+        .sort((a, b) => (b.lastTimeStamp - a.lastTimeStamp))
         .slice(0, 3);
-
-    useEffect(() => {
-        const fetchChatData = async () => {
-            const res = await fetch("/api/home/chat");
-            const data = await res.json();
-
-            setChatRooms(data);
-        }
-
-        fetchChatData();
-    }, [])
 
     return (
         <div className="border border-gray-200 rounded-md
@@ -60,7 +49,7 @@ export default function RecentChatsPanel() {
                     : (recentChats.map((chat) => (
                         <Link
                             key={chat.roomId}
-                            href={`\/chat/${chat.roomId}`}
+                            href={`/chat/${chat.roomId}`}
                             className="block rounded-md border border-gray-200 p-3 hover:bg-gray-50"
                         >
                             <div className="flex items-center justify-between">
