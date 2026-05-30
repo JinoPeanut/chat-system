@@ -32,12 +32,12 @@ export default function useLeavePanel({ leave, onRefresh }: useLeavePanelProps) 
     const leaveBalance = leave.leaveBalance;
     const leaveHistory = leave.leaveHistory;
 
-    const remainDays = leaveBalance?.remainDays ?? 0;
-    const remainHours = leaveBalance?.remainHours ?? 0;
-    const usedDays = leaveBalance?.usedDays ?? 0;
-    const useHours = leaveBalance?.useHours ?? 0;
-    const totalDays = leaveBalance?.totalDays ?? 0;
-    const leavePercent = leaveBalance?.leavePercent ?? 0;
+    const remainDays = leaveBalance.remainDays;
+    const remainHours = leaveBalance.remainHours
+    const usedDays = leaveBalance.usedDays;
+    const useHours = leaveBalance.useHours;
+    const totalDays = leaveBalance.totalDays;
+    const leavePercent = leaveBalance.leavePercent;
 
     const openModal = () => setIsOpen(true);
     const closeModal = () => setIsOpen(false);

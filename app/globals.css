@@ -124,3 +124,18 @@
 .refresh-icon:hover {
     animation: rotate-refresh 1s ease-in-out;
 }
+
+@keyframes skeleton-shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.animate-skeleton-shimmer {
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 0.8s ease-in-out infinite;
+}

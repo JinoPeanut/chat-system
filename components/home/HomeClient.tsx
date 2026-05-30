@@ -7,12 +7,13 @@ import NoticePanel from "./notice/HomeNoticePanel";
 import ProfileCard from "./profile/ProfileCard";
 import RecentChatsPanel from "./RecentChatsPanel";
 import TodaySchedulePanel from "./schedule/TodaySchedulePanel";
+import HomeSkeleton from "./skeletons/HomeSkeleton";
 
 export default function HomeClient() {
     const { homeData, isLoading, errorMessage, refetchHome } = useHomeData();
 
     if (isLoading) {
-        return <div className="p-4">홈 데이터를 불러오는 중입니다...</div>
+        return <HomeSkeleton />
     }
 
     if (errorMessage || !homeData) {

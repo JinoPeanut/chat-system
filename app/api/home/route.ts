@@ -94,7 +94,7 @@ export async function GET(request: Request) {
     });
 
     const { searchParams } = new URL(request.url);
-    const limit = Math.min(50, Math.max(1, Number(searchParams.get("limit") ?? 5)));
+    const limit = Math.min(50, Math.max(1, Number(searchParams.get("limit") ?? 4)));
 
     const notices = await prisma.notice.findMany({
         where: {

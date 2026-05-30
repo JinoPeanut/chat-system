@@ -46,9 +46,9 @@ export default function useAttendancePanel({ attendance, onRefresh }: useAttenda
     const myUserId = authUser?.id;
 
     const todayAttendance = attendance?.today;
-    const workMinutes = attendance?.workMinutes ?? 0;
-    const leftMinutes = attendance?.leftMinutes ?? 0;
-    const workPercent = attendance?.workPercent ?? 0;
+    const workMinutes = attendance.workMinutes
+    const leftMinutes = attendance.leftMinutes
+    const workPercent = attendance.workPercent
 
     const checkInText = formatTimeFromMinutes(todayAttendance?.checkInAt ?? null);
     const checkOutText = formatTimeFromMinutes(todayAttendance?.checkOutAt ?? null);
