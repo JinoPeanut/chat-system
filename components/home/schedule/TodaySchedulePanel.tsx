@@ -1,8 +1,17 @@
 "use client"
 
+import { RefreshOptions } from "@/types/home";
 import { ScheduleDetail, ScheduleHome } from "@/types/schedule";
 import { ChevronLeft, ChevronRight, MessageSquareMore, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
+
+type TodaySchedulePanelProps = {
+    schedule: {
+        today: ScheduleHome[],
+        calendar: ScheduleDetail[],
+    },
+    onRefresh: (options?: RefreshOptions) => Promise<void>,
+}
 
 const scheduleColors = [
     "bg-violet-200 hover:bg-violet-300",
@@ -25,9 +34,9 @@ const formatDateTimeLocal = (dateString: string) => {
     return localTime.toISOString().slice(0, 16)
 }
 
-export default function TodaySchedulePanel() {
-    const [scheduleHome, setScheduleHome] = useState<ScheduleHome[]>([]);
-    const [scheduleDetail, setScheduleDetail] = useState<ScheduleDetail[]>([]);
+export default function TodaySchedulePanel({ schedule, onRefresh }: TodaySchedulePanelProps) {
+    const scheduleHome = schedule.today;
+    const scheduleDetail = schedule.calendar;
 
     const [isOpen, setIsOpen] = useState(false);
 
@@ -59,13 +68,6 @@ export default function TodaySchedulePanel() {
 
     const openModal = () => setIsOpen(true);
     const closeModal = () => setIsOpen(false);
-
-    const fetchScheduleData = async () => {
-        const res = await fetch("/api/schedule");
-        const data = await res.json();
-        setScheduleHome(data);
-        setScheduleDetail(data);
-    }
 
     // 홈화면에만 표시할것들
     const myScheduleHome = scheduleHome
@@ -109,7 +111,7 @@ export default function TodaySchedulePanel() {
 
         if (!res.ok) return;
 
-        await fetchScheduleData();
+        await onRefresh({ silent: true });
 
         setForm({
             title: "",
@@ -140,7 +142,7 @@ export default function TodaySchedulePanel() {
 
         if (!res.ok) return;
 
-        await fetchScheduleData();
+        await onRefresh({ silent: true });
 
         setMode("list");
     }
@@ -158,14 +160,10 @@ export default function TodaySchedulePanel() {
 
         if (!res.ok) return;
 
-        await fetchScheduleData();
+        await onRefresh({ silent: true });
 
         setMode("list");
     }
-
-    useEffect(() => {
-        fetchScheduleData();
-    }, [])
 
     useEffect(() => {
         if (mode === "edit" && selectedSchedule) {

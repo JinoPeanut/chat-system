@@ -17,6 +17,7 @@ import {
 } from "recharts";
 import AdminSummaryCard from "./AdminSummaryCard";
 import AdminQuickMenu from "./AdminQuickMenu";
+import AdminActivityLogPanel from "./AdminActivityLogPanel";
 
 type LeaveChartData = {
     name: string,
@@ -126,49 +127,6 @@ const AdminQuickMenuField = [
         description: "관리자 및 역할 권한 설정"
     },
 ]
-
-
-type ActivityLogType = "notice" | "leave" | "default";
-
-
-type AdminActivityLog = {
-    id: number;
-    type: ActivityLogType;
-    message: string;
-    time: string;
-};
-const adminActivityLogs: AdminActivityLog[] = [
-    {
-        id: 1,
-        type: "default",
-        message: "관리자가 사원 '김철수'님의 정보를 수정했습니다.",
-        time: "10분 전",
-    },
-    {
-        id: 2,
-        type: "leave",
-        message: "관리자가 연차 신청(이유리)을 승인 처리했습니다.",
-        time: "1시간 전",
-    },
-    {
-        id: 3,
-        type: "notice",
-        message: "관리자가 공지사항 '5월 전체 회의 안내'를 등록했습니다.",
-        time: "3시간 전",
-    },
-    {
-        id: 4,
-        type: "default",
-        message: "관리자가 부서 '마케팅팀'을 추가했습니다.",
-        time: "5시간 전",
-    },
-];
-
-const getActivityIcon = (type: ActivityLogType) => {
-    if (type === "notice") return Megaphone
-    if (type === "leave") return CalendarCheck
-    return ClipboardCheck
-}
 
 export default function AdminDashboard() {
     const [summary, setSummary] = useState<AdminSummary | null>(null);
@@ -475,37 +433,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* 최근 활동 로그 */}
-            <div className="flex flex-col gap-1 w-full bg-white/80 p-8 rounded-xl shadow-sm">
-                <div className="flex justify-between items-center">
-                    <p className="text-base tracking-tight font-semibold">최근 활동 로그</p>
-                    <div
-                        //onClick={}
-                        className="flex gap-3 items-center justify-between border border-gray-300 text-gray-500 rounded-lg px-4 py-2 cursor-pointer"
-                    >
-                        <p className="text-sm">전체 보기</p>
-                        <ChevronRight size={18} />
-                    </div>
-                </div>
-
-                {adminActivityLogs.map((log, index) => {
-                    const Icon = getActivityIcon(log.type);
-                    const isLast = index === adminActivityLogs.length - 1;
-                    return (
-                        <div key={log.id} className="flex flex-col">
-                            <div className="flex items-center justify-between px-2 py-3">
-                                <div className="flex items-center justify-center gap-2">
-                                    <Icon size={14} className="w-9 h-9 text-gray-500 bg-gray-100 rounded-full p-2" />
-                                    <p className="text-gray-600 font-semibold text-sm">{log.message}</p>
-                                </div>
-                                <p className="text-gray-600 font-semibold text-sm">
-                                    {log.time}
-                                </p>
-                            </div>
-                            {isLast ? <></> : <span className="h-[1px] w-full bg-gray-200" />}
-                        </div>
-                    )
-                })}
-            </div>
+            <AdminActivityLogPanel />
         </div>
     )
 }

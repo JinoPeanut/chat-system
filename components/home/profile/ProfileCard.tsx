@@ -6,10 +6,11 @@ import { HomeProfile, ProfileForm } from "@/types/profile";
 import { useAuthStore } from "@/stores/useAuthStore";
 import ProfileSetting from "./ProfileSetting";
 import ProfileAvatar from "@/components/common/ProfileAvatar";
+import { RefreshOptions } from "@/types/home";
 
 type ProfileCardProps = {
     profile: HomeProfile | null;
-    onRefresh: () => Promise<void>;
+    onRefresh: (options?: RefreshOptions) => Promise<void>;
 }
 
 const getStatusWork = (work: string) => {
@@ -81,7 +82,7 @@ export default function ProfileCard({ profile, onRefresh }: ProfileCardProps) {
                 })
             }
 
-            await onRefresh();
+            await onRefresh({ silent: true });
 
             closeModal();
         } catch (error) {

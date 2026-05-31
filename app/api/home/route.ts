@@ -162,6 +162,58 @@ export async function GET(request: Request) {
         }
     });
 
+    const now = new Date();
+
+    const startOfToday = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+    );
+
+    const startOfTomorrow = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1,
+    );
+
+    const scheduleHome = await prisma.schedule.findMany({
+        where: {
+            userId: currentUser.id,
+            startAt: {
+                gte: startOfToday,
+                lt: startOfTomorrow,
+            },
+        },
+        select: {
+            id: true,
+            title: true,
+            titleMemo: true,
+            startAt: true,
+            endAt: true,
+        },
+        orderBy: {
+            startAt: "asc",
+        },
+        take: 3,
+    });
+
+    const scheduleDetail = await prisma.schedule.findMany({
+        where: {
+            userId: currentUser.id
+        },
+        select: {
+            id: true,
+            title: true,
+            titleMemo: true,
+            content: true,
+            startAt: true,
+            endAt: true,
+        },
+        orderBy: {
+            startAt: "asc",
+        }
+    })
+
     return NextResponse.json({
         attendance: attendanceSummary,
         recentChat,
@@ -171,5 +223,9 @@ export async function GET(request: Request) {
             leaveHistory: leaveHistory,
         },
         profile,
+        schedules: {
+            today: scheduleHome,
+            calendar: scheduleDetail,
+        }
     });
 }

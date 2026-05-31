@@ -2,26 +2,6 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-export async function GET() {
-    const cookieStore = await cookies();
-    const userId = cookieStore.get("auth_user_id")?.value;
-
-    if (!userId) {
-        return NextResponse.json(
-            { message: "로그인이 필요합니다." },
-            { status: 401 }
-        );
-    }
-
-    // 로그인된 현재 유저의 데이터만 정렬한 값
-    const schedule = await prisma.schedule.findMany({
-        where: { userId },
-        orderBy: { startAt: "asc" }
-    });
-
-    return NextResponse.json(schedule);
-}
-
 export async function POST(request: Request) {
     const cookieStore = await cookies();
     const userId = cookieStore.get("auth_user_id")?.value;

@@ -2,11 +2,9 @@
 
 import ProfileAvatar from "@/components/common/ProfileAvatar";
 import { useAuthStore } from "@/stores/useAuthStore";
-import { Chat } from "@/types/chat";
 import { Department } from "@/types/department";
-import { HomeResponse } from "@/types/home";
 import { getStatusColor, getStatusText } from "@/utils/statusUtils";
-import { ChevronRight, MessageCircle, Settings, User } from "lucide-react";
+import { ChevronRight, MessageCircle, Settings } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -20,7 +18,6 @@ export default function ChatPanel() {
 
     const [departments, setDepartments] = useState<Department[]>([]);
     const [openDepts, setOpenDepts] = useState<string[]>([]);
-    const [chatRooms, setChatRooms] = useState<Chat[]>([]);
     const [keyword, setKeyword] = useState("");
 
     const isSearching = keyword.trim().length > 0;
@@ -63,11 +60,6 @@ export default function ChatPanel() {
         const deptRes = await fetch(url);
         const deptData = await deptRes.json();
         setDepartments(deptData);
-
-        // 채팅창 정보가 필요해서 추가
-        const homeRes = await fetch("/api/home");
-        const homeData: HomeResponse = await homeRes.json();
-        setChatRooms(homeData.recentChat);
     };
 
     useEffect(() => {

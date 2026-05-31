@@ -4,10 +4,11 @@ import { useEffect } from "react";
 import { ArrowDown } from "lucide-react";
 import useAttendancePanel from "@/hooks/attendance/useAttendancePanel";
 import { HomeAttendance } from "@/types/attendance";
+import { RefreshOptions } from "@/types/home";
 
 type AttendancePanelProps = {
     attendance: HomeAttendance,
-    onRefresh: () => Promise<void>,
+    onRefresh: (options?: RefreshOptions) => Promise<void>,
 }
 
 export default function AttendancePanel({ attendance, onRefresh }: AttendancePanelProps) {

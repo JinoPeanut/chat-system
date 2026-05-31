@@ -1,10 +1,11 @@
 import { useAuthStore } from "@/stores/useAuthStore";
 import { HomeAttendance } from "@/types/attendance";
+import { RefreshOptions } from "@/types/home";
 import { useState } from "react";
 
 type useAttendancePanelProps = {
     attendance: HomeAttendance,
-    onRefresh: () => Promise<void>,
+    onRefresh: (options?: RefreshOptions) => Promise<void>,
 }
 
 export default function useAttendancePanel({ attendance, onRefresh }: useAttendancePanelProps) {
@@ -72,7 +73,7 @@ export default function useAttendancePanel({ attendance, onRefresh }: useAttenda
 
         if (!res.ok) return;
 
-        await onRefresh();
+        await onRefresh({ silent: true });
     }
 
     const handleCheckOut = async () => {
@@ -94,7 +95,7 @@ export default function useAttendancePanel({ attendance, onRefresh }: useAttenda
 
         if (!res.ok) return;
 
-        await onRefresh();
+        await onRefresh({ silent: true });
     }
 
     return {

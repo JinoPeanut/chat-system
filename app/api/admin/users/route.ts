@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { Prisma } from "@prisma/client";
 
 const USER_STATUSES = ["online", "offline", "AFK"] as const;
+const USER_ROLES = ["ADMIN", "USER"] as const;
 
 export async function GET(request: Request) {
     const cookieStore = await cookies();
@@ -131,6 +132,13 @@ export async function PATCH(request: Request) {
         );
     }
 
+    if (!USER_ROLES.includes(body.role)) {
+        return NextResponse.json(
+            { message: "올바르지 않은 권한입니다." },
+            { status: 400 }
+        )
+    }
+
     const targetUser = await prisma.user.findFirst({
         where: {
             id: body.id,
@@ -185,6 +193,17 @@ export async function PATCH(request: Request) {
             },
         }
     });
+
+    await prisma.adminActivityLog.create({
+        data: {
+            adminId: userId,
+            companyId: admin.companyId,
+            type: "default",
+            message: `관리자가 사원 ${user.name} 님의 정보를 수정했습니다.`,
+            targetId: user.id,
+            targetType: "user",
+        }
+    })
 
     return NextResponse.json({
         message: "사원 정보가 수정되었습니다.",

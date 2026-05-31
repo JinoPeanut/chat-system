@@ -8,13 +8,14 @@ import LeaveSummaryCard from "./LeaveSummaryCard";
 import { getLeaveColor } from "../../../utils/leaveUtils";
 import useLeavePanel from "@/hooks/leave/useLeavePanel";
 import { LeaveBalance, LeaveHistory } from "@/types/leave";
+import { RefreshOptions } from "@/types/home";
 
 type LeavePanelProps = {
     leave: {
         leaveBalance: LeaveBalance,
         leaveHistory: LeaveHistory[],
     }
-    onRefresh: () => Promise<void>,
+    onRefresh: (options?: RefreshOptions) => Promise<void>,
 }
 
 export default function LeavePanel({ leave, onRefresh }: LeavePanelProps) {

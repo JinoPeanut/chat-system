@@ -1,13 +1,14 @@
 import { ApplyForm, LeaveBalance, LeaveHistory } from "@/types/leave";
 import { useState } from "react";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { RefreshOptions } from "@/types/home";
 
 type useLeavePanelProps = {
     leave: {
         leaveBalance: LeaveBalance,
         leaveHistory: LeaveHistory[],
     }
-    onRefresh: () => Promise<void>,
+    onRefresh: (options?: RefreshOptions) => Promise<void>,
 }
 
 export default function useLeavePanel({ leave, onRefresh }: useLeavePanelProps) {
@@ -95,7 +96,7 @@ export default function useLeavePanel({ leave, onRefresh }: useLeavePanelProps) 
                 return;
             }
 
-            await onRefresh();
+            await onRefresh({ silent: true });
 
             setApplyForm({
                 leaveDate: "",
@@ -123,7 +124,7 @@ export default function useLeavePanel({ leave, onRefresh }: useLeavePanelProps) 
 
         if (!res.ok) return;
 
-        await onRefresh();
+        await onRefresh({ silent: true });
     };
 
     return {

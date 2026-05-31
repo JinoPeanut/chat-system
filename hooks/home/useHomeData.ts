@@ -1,15 +1,21 @@
-import { HomeResponse } from "@/types/home";
+import { HomeResponse, RefreshOptions } from "@/types/home";
 import { useEffect, useState } from "react";
 
 export function useHomeData() {
     const [homeData, setHomeData] = useState<HomeResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isRefreshing, setIsRefreshing] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
 
-    const fetchHomeData = async () => {
+    const fetchHomeData = async (options?: RefreshOptions) => {
+
+        if (!options?.silent) {
+            setIsLoading(true);
+        } else {
+            setIsRefreshing(true);
+        }
 
         try {
-            setIsLoading(true);
             setErrorMessage("");
 
             const res = await fetch("/api/home");
@@ -25,6 +31,7 @@ export function useHomeData() {
             setErrorMessage("네트워크 오류가 발생했습니다.");
         } finally {
             setIsLoading(false);
+            setIsRefreshing(false);
         }
     };
 
@@ -35,6 +42,7 @@ export function useHomeData() {
     return {
         homeData,
         isLoading,
+        isRefreshing,
         errorMessage,
         refetchHome: fetchHomeData,
     };

@@ -8,19 +8,39 @@ import ProfileCard from "./profile/ProfileCard";
 import RecentChatsPanel from "./RecentChatsPanel";
 import TodaySchedulePanel from "./schedule/TodaySchedulePanel";
 import HomeSkeleton from "./skeletons/HomeSkeleton";
+import ToastMessage from "../ui/ToastMessage";
+import { useEffect, useState } from "react";
 
 export default function HomeClient() {
     const { homeData, isLoading, errorMessage, refetchHome } = useHomeData();
+    const [toastMessage, setToastMessage] = useState("");
+
+    useEffect(() => {
+        if (errorMessage && homeData) {
+            setToastMessage(errorMessage);
+        }
+    }, [errorMessage, homeData]);
 
     if (isLoading) {
         return <HomeSkeleton />
     }
 
-    if (errorMessage || !homeData) {
-        return <div className="p-4">{errorMessage || "홈 데이터가 없습니다."}</div>
+    if (errorMessage && !homeData) {
+        return <div className="flex justify-center items-center p-4">{errorMessage}</div>
     }
+
+    if (!homeData) {
+        return <div className="flex justify-center items-center p-4">홈 데이터가 없습니다.</div>;
+    }
+
     return (
         <div>
+            <ToastMessage
+                message={toastMessage}
+                type="error"
+                onClose={() => setToastMessage("")}
+            />
+
             {/* 최상단 텍스트 */}
             <div className="flex items-end gap-2 px-6 pt-2">
                 <p className="font-bold text-sm">
@@ -57,7 +77,10 @@ export default function HomeClient() {
                         profile={homeData.profile}
                         onRefresh={refetchHome}
                     />
-                    <TodaySchedulePanel />
+                    <TodaySchedulePanel
+                        schedule={homeData.schedules}
+                        onRefresh={refetchHome}
+                    />
                 </div>
             </div>
         </div>

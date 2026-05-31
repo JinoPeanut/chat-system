@@ -1,26 +1,41 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-
-export async function GET() {
-    const attendance = await prisma.attendance.findMany({
-        orderBy: {
-            date: "desc",
-        },
-    });
-
-    return NextResponse.json(attendance);
-}
+import { cookies } from "next/headers";
 
 export async function POST(request: Request) {
+    const cookieStore = await cookies();
+    const userId = cookieStore.get("auth_user_id")?.value;
+
+    if (!userId) {
+        return NextResponse.json(
+            { message: "로그인이 필요합니다." },
+            { status: 401 }
+        );
+    }
+
     const body = await request.json();
 
-    const { userId, date, checkInAt, checkOutAt, workMinutes } = body;
+    const { date, checkInAt, checkOutAt, workMinutes } = body;
 
-    if (!userId || !date) {
+    if (!date) {
         return NextResponse.json(
             { message: "필수 값이 없습니다." },
             { status: 400 }
         );
+    }
+
+    const existingAttendance = await prisma.attendance.findFirst({
+        where: {
+            userId,
+            date
+        }
+    })
+
+    if (existingAttendance) {
+        return NextResponse.json(
+            { message: "이미 출근 처리되어 있습니다." },
+            { status: 409 }
+        )
     }
 
     const attendance = await prisma.attendance.create({
@@ -38,10 +53,20 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-    const body = await request.json();
-    const { userId, date, checkOutAt, workMinutes } = body;
+    const cookieStore = await cookies();
+    const userId = cookieStore.get("auth_user_id")?.value;
 
-    if (!userId || !date) {
+    if (!userId) {
+        return NextResponse.json(
+            { message: "로그인이 필요합니다." },
+            { status: 401 }
+        );
+    }
+
+    const body = await request.json();
+    const { date, checkOutAt, workMinutes } = body;
+
+    if (!date) {
         return NextResponse.json(
             { message: "필수 값이 없습니다." },
             { status: 400 }
