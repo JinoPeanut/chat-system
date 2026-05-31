@@ -11,19 +11,17 @@
 
 ## 미리보기
 
-### 로그인
+### 인증
 
 ![로그인](./public/images/사내메신저_로그인.png)
-
-### 회원가입
-
 ![회원가입 1단계](./public/images/사내메신저_회원가입1.png)
 ![회원가입 2단계](./public/images/사내메신저_회원가입2.png)
 ![회원가입 완료](./public/images/사내메신저_회원가입3.png)
 
-### 홈
+### 홈 / 프로필
 
 ![홈](./public/images/사내메신저_홈.png)
+![프로필 설정](./public/images/사내메신저_프로필설정.png)
 
 ### 채팅
 
@@ -33,21 +31,21 @@
 ### 게시판
 
 ![게시판 기본 화면](./public/images/사내메신저_게시판_기본화면.png)
+![게시판 글쓰기](./public/images/사내메신저_게시판_글쓰기.png)
 ![게시판 상세 내용](./public/images/사내메신저_게시판_상세내용.png)
 
-### 일정
+### 일정 / 연차
 
 ![일정 상세](./public/images/사내메신저_일정상세.png)
 ![일정 수정](./public/images/사내메신저_일정수정.png)
-
-### 연차
-
 ![연차 신청](./public/images/사내메신저_연차신청.png)
 ![연차 내역](./public/images/사내메신저_연차내역.png)
 
-### 프로필
+### 관리자
 
-![프로필 설정](./public/images/사내메신저_프로필설정.png)
+![관리자 대시보드](./public/images/사내메신저_관리자페이지.png)
+![관리자 사원 관리](./public/images/사내메신저_관리자_사원관리.png)
+![관리자 사원 정보 수정](./public/images/사내메신저_관리자_사원정보수정.png)
 
 ## 주요 기능
 
