@@ -66,6 +66,7 @@ model User {
   companyId   String
   role        UserRole    @default(USER)
 
+  managedDepartments Department[] @relation("DepartmentManager")
   messages    Message[]   @relation("MessageSender")
   chatRooms   ChatRoom[]  @relation("ChatMembers")
   notices     Notice[]
@@ -75,6 +76,23 @@ model User {
   schedule    Schedule[]
   company     Company      @relation(fields: [companyId], references: [id])
   adminActivityLogs AdminActivityLog[]
+}
+
+model Department {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  companyId   String
+  managerId   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company     Company  @relation(fields: [companyId], references: [id])
+  manager     User?    @relation("DepartmentManager", fields: [managerId], references: [id])
+
+  @@unique([companyId, name])
+  @@index([companyId])
+  @@index([managerId])
 }
 
 model Message {
@@ -182,6 +200,7 @@ model Company {
   inviteCode String   @unique
 
   users     User[]
+  departments Department[]
 }
 
 model AdminActivityLog {
