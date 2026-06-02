@@ -7,15 +7,7 @@ import { getStatusCardColor, getStatusColor, getStatusText } from "@/utils/statu
 import { ChevronDown, ChevronRight, Edit, RefreshCcw, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import AdminUserEditModal from "./AdminUserEditModal";
-
-export const formatUserCreatedAt = (createdAt: string) => {
-    const date = new Date(createdAt);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-
-    return `${year}.${month}.${day}`;
-}
+import { formatCreatedAt } from "@/utils/dateUtils";
 
 const statusOptions = [
     { label: "전체 상태", value: "" },
@@ -110,10 +102,9 @@ export default function AdminUserPage() {
     const fetchDepartmentData = async () => {
         const res = await fetch("/api/departments");
         const data = await res.json();
+
         if (!res.ok) {
-            if (res.status === 400) {
-                setErrorMessage("");
-            }
+            setErrorMessage(data.message ?? "부서를 찾을 수 없습니다.");
             return;
         }
 
@@ -285,7 +276,7 @@ export default function AdminUserPage() {
                                         <div className={`w-2 h-2 rounded-full ${getStatusColor(user.status)}`} />
                                         <p className="text-center">{getStatusText(user.status)}</p>
                                     </div>
-                                    <p className="text-center">{formatUserCreatedAt(user.createdAt)}</p>
+                                    <p className="text-center">{formatCreatedAt(user.createdAt)}</p>
                                     <div className="flex gap-1">
                                         <button
                                             onClick={() => handleOpenEditModal(user)}

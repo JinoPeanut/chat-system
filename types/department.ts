@@ -11,6 +11,7 @@ export type AdminDepartment = {
     name: string,
     description: string | null,
     managerId: string | null,
+    memberCount: number,
     createdAt: string,
     updatedAt: string,
     manager?: {

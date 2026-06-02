@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers";
+import { Prisma } from "@prisma/client";
 
-export async function GET() {
+export async function GET(request: Request) {
     const cookieStore = await cookies();
     const userId = cookieStore.get("auth_user_id")?.value;
 
@@ -25,8 +26,60 @@ export async function GET() {
         );
     }
 
+    const { searchParams } = new URL(request.url);
+    const page = Math.max(1, Number(searchParams.get("page") ?? 1));
+    const limit = Math.min(50, Math.max(1, Number(searchParams.get("limit") ?? 7)));
+    const managerId = searchParams.get("managerId")?.trim();
+    const keyword = searchParams.get("keyword")?.trim();
+
+    const where: Prisma.DepartmentWhereInput = {
+        companyId: admin.companyId,
+    }
+
+    if (managerId) {
+        where.managerId = managerId;
+    }
+
+    if (keyword) {
+        where.OR = [
+            { name: { contains: keyword, mode: "insensitive" } },
+        ]
+    }
+
+    const deptTotal = await prisma.department.count({
+        where: { companyId: admin.companyId }
+    })
+
+    const filteredDeptTotal = await prisma.department.count({
+        where,
+    })
+
+    const assignedManagerTotal = await prisma.department.count({
+        where: {
+            companyId: admin.companyId,
+            managerId: {
+                not: null,
+            }
+        }
+    })
+
+    const unassignedManagerTotal = await prisma.department.count({
+        where: {
+            companyId: admin.companyId,
+            managerId: null,
+        },
+    });
+
+    const assignedTotalPercent = deptTotal > 0
+        ? Math.round((assignedManagerTotal / deptTotal) * 100)
+        : 0;
+
+    const unassignedTotalPercent = deptTotal > 0
+        ? Math.round((unassignedManagerTotal / deptTotal) * 100)
+        : 0;
+
     const departments = await prisma.department.findMany({
-        where: { companyId: admin.companyId },
+        where,
         select: {
             id: true,
             name: true,
@@ -45,11 +98,57 @@ export async function GET() {
         },
         orderBy: {
             name: "asc",
-        }
+        },
+        skip: (page - 1) * limit,
+        take: limit,
     });
 
+    const memberCount = await prisma.user.groupBy({
+        by: ["department"],
+        where: { companyId: admin.companyId },
+        _count: { id: true }
+    });
+
+    const departmentWithMemberCount = departments.map((department) => {
+        const countItem = memberCount.find(
+            (item) => item.department === department.name
+        );
+
+        return {
+            ...department,
+            memberCount: countItem?._count.id ?? 0,
+        }
+    })
+
+
+    const managerOptions = await prisma.department.findMany({
+        where: {
+            companyId: admin.companyId,
+            managerId: {
+                not: null,
+            }
+        },
+        select: {
+            managerId: true,
+            manager: {
+                select: {
+                    name: true,
+                }
+            }
+        },
+    })
+
     return NextResponse.json({
-        departments,
+        departments: departmentWithMemberCount,
+        managerOptions,
+        deptTotal,
+        assignedManagerTotal,
+        unassignedManagerTotal,
+        assignedTotalPercent,
+        unassignedTotalPercent,
+        page,
+        limit,
+        totalPages: Math.max(1, Math.ceil(filteredDeptTotal / limit)),
     })
 }
 

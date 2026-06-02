@@ -82,6 +82,46 @@ async function main() {
         }
     });
 
+    const users = await prisma.user.findMany({
+        select: {
+            department: true,
+            companyId: true,
+        },
+    });
+
+    const departmentMap = new Map<string, { name: string; companyId: string }>();
+
+    for (const user of users) {
+        if (!user.department) continue;
+
+        const key = `${user.companyId}:${user.department}`;
+
+        if (!departmentMap.has(key)) {
+            departmentMap.set(key, {
+                name: user.department,
+                companyId: user.companyId,
+            });
+        }
+    }
+
+    for (const department of departmentMap.values()) {
+        await prisma.department.upsert({
+            where: {
+                companyId_name: {
+                    companyId: department.companyId,
+                    name: department.name,
+                },
+            },
+            update: {},
+            create: {
+                name: department.name,
+                companyId: department.companyId,
+                description: null,
+                managerId: null,
+            },
+        });
+    }
+
     await prisma.chatRoom.upsert({
         where: { id: "group-1" },
         update: {},
