@@ -16,6 +16,11 @@ export async function GET(request: Request) {
         select: {
             companyId: true,
             role: true,
+            company: {
+                select: {
+                    name: true,
+                }
+            }
         }
     })
 
@@ -30,6 +35,7 @@ export async function GET(request: Request) {
     const page = Math.max(1, Number(searchParams.get("page") ?? 1));
     const limit = Math.min(50, Math.max(1, Number(searchParams.get("limit") ?? 7)));
     const managerId = searchParams.get("managerId")?.trim();
+    const sort = searchParams.get("sort");
     const keyword = searchParams.get("keyword")?.trim();
 
     const where: Prisma.DepartmentWhereInput = {
@@ -78,6 +84,26 @@ export async function GET(request: Request) {
         ? Math.round((unassignedManagerTotal / deptTotal) * 100)
         : 0;
 
+    let orderBy: Prisma.DepartmentOrderByWithRelationInput = {
+        name: "asc",
+    }
+
+    if (sort === "createdAtDesc") {
+        orderBy = { createdAt: "desc" }
+    }
+
+    if (sort === "createdAtAsc") {
+        orderBy = { createdAt: "asc" }
+    }
+
+    if (sort === "managerAsc") {
+        orderBy = {
+            manager: {
+                name: "asc"
+            }
+        }
+    }
+
     const departments = await prisma.department.findMany({
         where,
         select: {
@@ -96,9 +122,7 @@ export async function GET(request: Request) {
                 }
             }
         },
-        orderBy: {
-            name: "asc",
-        },
+        orderBy,
         skip: (page - 1) * limit,
         take: limit,
     });
@@ -138,8 +162,51 @@ export async function GET(request: Request) {
         },
     })
 
+    const orgDepartments = await prisma.department.findMany({
+        where: { companyId: admin.companyId },
+        select: {
+            id: true,
+            name: true,
+            managerId: true,
+            manager: {
+                select: {
+                    name: true,
+                    position: true,
+                }
+            }
+        },
+        orderBy: {
+            name: "asc",
+        },
+    });
+
+    const organizationMemberCounts = await prisma.user.groupBy({
+        by: ["department"],
+        where: {
+            companyId: admin.companyId,
+        },
+        _count: {
+            id: true,
+        },
+    });
+
+    const organizationData = orgDepartments.map((department) => {
+        const memberCount = organizationMemberCounts.find(
+            (item) => item.department === department.name
+        )?._count.id ?? 0;
+
+        return {
+            ...department,
+            memberCount,
+        };
+    });
+
     return NextResponse.json({
         departments: departmentWithMemberCount,
+        organization: {
+            companyName: admin.company.name,
+            departments: organizationData,
+        },
         managerOptions,
         deptTotal,
         assignedManagerTotal,

@@ -3,10 +3,10 @@
 import ProfileAvatar from "@/components/common/ProfileAvatar"
 import { User } from "@/types/chat"
 import { getStatusCardColor, getStatusColor, getStatusText } from "@/utils/statusUtils"
-import { formatUserCreatedAt } from "./AdminUserPage"
 import { useState } from "react"
 import { ChevronDown, ChevronRight } from "lucide-react"
 import { Department } from "@/types/department"
+import { formatCreatedAt } from "@/utils/dateUtils"
 
 type AdminUserEditModalProps = {
     user: User,
@@ -136,7 +136,7 @@ export default function AdminUserEditModal({ user, onClose, departments, positio
 
                             <p className="text-sm text-gray-500">{user.email}</p>
 
-                            <p className="text-sm text-gray-500">가입일: {formatUserCreatedAt(user.createdAt)}</p>
+                            <p className="text-sm text-gray-500">가입일: {formatCreatedAt(user.createdAt)}</p>
                         </div>
 
                         <div className="flex flex-col gap-3">

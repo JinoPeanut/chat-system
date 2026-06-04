@@ -1,14 +1,19 @@
 "use client"
 
 import { usePagination } from "@/hooks/notice/usePagination";
-import { AdminDepartment } from "@/types/department";
+import { AdminDepartment, OrganizationDepartment } from "@/types/department";
 import { formatCreatedAt } from "@/utils/dateUtils";
-import { Building2Icon, ChevronDown, ChevronRight, LucideIcon, Search, UserCheck2Icon, UserRoundX } from "lucide-react";
+import { Building2Icon, ChevronDown, ChevronRight, LucideIcon, RefreshCcw, Search, UserCheck2Icon, UserRoundX } from "lucide-react";
 import { useEffect, useState } from "react";
+import OrganizationChart from "./OrganizationChart";
 
 type AdminDepartmentsResponse = {
     message: string,
     departments: AdminDepartment[],
+    organization: {
+        companyName: string,
+        departments: OrganizationDepartment[],
+    },
     managerOptions: ManagerOption[],
     deptTotal: number,
     assignedManagerTotal: number,
@@ -38,6 +43,13 @@ type ManagerOption = {
 export default function AdminDeptPage() {
 
     const [department, setDepartment] = useState<AdminDepartment[]>([]);
+    const [orgDepartment, setOrgDepartment] = useState<{
+        companyName: string,
+        departments: OrganizationDepartment[],
+    }>({
+        companyName: "",
+        departments: [],
+    });
     const [managerOptions, setManagerOptions] = useState<ManagerOption[]>([]);
     const [deptTotal, setDeptTotal] = useState({
         departmentTotal: 0,
@@ -68,9 +80,20 @@ export default function AdminDeptPage() {
         { label: "부서장 미 지정", icon: UserRoundX, iconColor: "text-orange-500", bgColor: "bg-orange-200", total: deptTotal.unassignedManagerTotal, percent: deptPercent.unassignedTotalPercent }
     ]
 
+    const sortOptions = [
+        { label: "부서명 순", value: "nameAsc" },
+        { label: "부서장 순", value: "managerAsc" },
+        { label: "생성일 최신순", value: "createdAtDesc" },
+        { label: "생성일 오래된순", value: "createdAtAsc" },
+    ]
+
     const selectManagerName = managerOptions.find(
         (manager) => manager.managerId === selectManager
     )?.manager.name;
+
+    const selectSortName = sortOptions.find(
+        (sort) => sort.value === selectSort
+    )?.label;
 
     const fetchDeptData = async () => {
 
@@ -87,6 +110,10 @@ export default function AdminDeptPage() {
             params.set("managerId", selectManager);
         }
 
+        if (selectSort) {
+            params.set("sort", selectSort);
+        }
+
 
         try {
             const res = await fetch(`/api/admin/departments?${params.toString()}`);
@@ -98,6 +125,7 @@ export default function AdminDeptPage() {
             }
 
             setDepartment(data.departments);
+            setOrgDepartment(data.organization);
             setManagerOptions(data.managerOptions);
             setDeptTotal({
                 departmentTotal: data.deptTotal,
@@ -116,7 +144,7 @@ export default function AdminDeptPage() {
 
     useEffect(() => {
         fetchDeptData();
-    }, [page, keyword, selectManager])
+    }, [page, keyword, selectManager, selectSort])
 
     return (
         <div className="h-[100dvh] w-full flex flex-col gap-2 px-8 py-6">
@@ -222,7 +250,49 @@ export default function AdminDeptPage() {
                         </div>
 
                         {/* 정렬 선택 */}
+                        <div
+                            onClick={() => setSortSelectOpen((prev) => !prev)}
+                            className="relative w-44 rounded-lg px-4 py-2 border border-gray-300"
+                        >
+                            <div className="flex gap-2 items-center">
+                                <span className="text-center">{selectSortName ?? "정렬 선택"}</span>
+                                {sortSelectOpen ? (<ChevronRight size={18} className="absolute right-5" />) : (<ChevronDown size={18} className="absolute right-5" />)}
+                            </div>
+                            {sortSelectOpen && (
+                                <div className="absolute left-0 top-full mt-2 z-20 w-full rounded-2xl border border-gray-200 bg-white p-2 shadow-md">
+                                    {sortOptions.map((sort) => {
+                                        return (
+                                            <button
+                                                key={sort.label}
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectSort(sort.value);
+                                                    setSortSelectOpen(false);
+                                                    setPage(1);
+                                                }}
+                                                className={`mb-1 w-full rounded-full px-3 py-1 text-sm hover:bg-violet-50 cursor-pointer`}
+                                            >
+                                                {sort.label}
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                            )}
+                        </div>
 
+                        {/* 선택 초기화 버튼 */}
+                        <button
+                            onClick={() => {
+                                setKeyword("");
+                                setSelectManager("");
+                                setSelectSort("");
+                                setPage(1);
+                            }}
+                            className="cursor-pointer text-gray-500 hover:text-gray-700"
+                        >
+                            <RefreshCcw className="refresh-icon" />
+                        </button>
                     </div>
 
                     {/* 부서 관리 대시보드 */}
@@ -275,9 +345,7 @@ export default function AdminDeptPage() {
                         </button>
                     </div>
                 </div>)
-                : (<div>
-
-                </div>)
+                : (<OrganizationChart organization={orgDepartment} />)
             }
         </div>
     )

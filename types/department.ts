@@ -21,3 +21,13 @@ export type AdminDepartment = {
         profilePic: string | null,
     } | null,
 }
+
+export type OrganizationDepartment = {
+    id: string;
+    name: string;
+    memberCount: number;
+    manager: {
+        name: string;
+        position: string;
+    } | null;
+};
