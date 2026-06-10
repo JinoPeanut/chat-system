@@ -3,9 +3,12 @@
 import { usePagination } from "@/hooks/notice/usePagination";
 import { AdminDepartment, OrganizationDepartment } from "@/types/department";
 import { formatCreatedAt } from "@/utils/dateUtils";
-import { Building2Icon, ChevronDown, ChevronRight, LucideIcon, RefreshCcw, Search, UserCheck2Icon, UserRoundX } from "lucide-react";
+import { Building2Icon, ChevronDown, ChevronRight, Edit, LucideIcon, RefreshCcw, Search, Settings, Trash2, UserCheck2Icon, UserRoundX } from "lucide-react";
 import { useEffect, useState } from "react";
 import OrganizationChart from "./OrganizationChart";
+import CreateDeptModal from "./CreateDeptModal";
+import EditDeptModal from "./EditDeptModal";
+import DeleteDeptModal from "./DeleteDeptModal";
 
 type AdminDepartmentsResponse = {
     message: string,
@@ -15,6 +18,7 @@ type AdminDepartmentsResponse = {
         departments: OrganizationDepartment[],
     },
     managerOptions: ManagerOption[],
+    managerCandidates: ManagerCandidate[],
     deptTotal: number,
     assignedManagerTotal: number,
     unassignedManagerTotal: number,
@@ -38,6 +42,13 @@ type ManagerOption = {
     manager: {
         name: string,
     }
+}
+
+export type ManagerCandidate = {
+    id: string;
+    name: string;
+    department: string;
+    position: string;
 };
 
 export default function AdminDeptPage() {
@@ -51,6 +62,7 @@ export default function AdminDeptPage() {
         departments: [],
     });
     const [managerOptions, setManagerOptions] = useState<ManagerOption[]>([]);
+    const [managerCandidates, setManagerCandidates] = useState<ManagerCandidate[]>([]);
     const [deptTotal, setDeptTotal] = useState({
         departmentTotal: 0,
         assignedManagerTotal: 0,
@@ -73,6 +85,12 @@ export default function AdminDeptPage() {
 
     const [selectSort, setSelectSort] = useState("");
     const [sortSelectOpen, setSortSelectOpen] = useState(false);
+
+    const [selectDept, setSelectDept] = useState<AdminDepartment | null>(null);
+
+    const [createDeptModalOpen, setCreateDeptModalOpen] = useState(false);
+    const [deptEditModalOpen, setDeptEditModalOpen] = useState(false);
+    const [deptDeleteModalOpen, setDeptDeleteModalOpen] = useState(false);
 
     const deptCardField: DeptCardField[] = [
         { label: "전체 부서 수", icon: Building2Icon, iconColor: "text-violet-500", bgColor: "bg-violet-200", total: deptTotal.departmentTotal, description: "전체 부서" },
@@ -127,6 +145,7 @@ export default function AdminDeptPage() {
             setDepartment(data.departments);
             setOrgDepartment(data.organization);
             setManagerOptions(data.managerOptions);
+            setManagerCandidates(data.managerCandidates);
             setDeptTotal({
                 departmentTotal: data.deptTotal,
                 assignedManagerTotal: data.assignedManagerTotal,
@@ -169,7 +188,7 @@ export default function AdminDeptPage() {
 
                 <button
                     type="button"
-                    //onClick={}
+                    onClick={() => setCreateDeptModalOpen(true)}
                     className="px-4 py-2 rounded-md border border-violet-500 text-white bg-violet-500
                         hover:bg-violet-400 hover:border-violet-400 cursor-pointer"
                 >
@@ -316,7 +335,22 @@ export default function AdminDeptPage() {
                                         <p>{dept.memberCount}명</p>
                                         <p>{dept.description}</p>
                                         <p>{formatCreatedAt(dept.createdAt)}</p>
-                                        <p>작업</p>
+                                        <div className="flex gap-5 cursor-pointer text-gray-500">
+                                            <Edit
+                                                className="hover:text-gray-700"
+                                                onClick={() => {
+                                                    setSelectDept(dept);
+                                                    setDeptEditModalOpen(true);
+                                                }}
+                                            />
+                                            <Trash2
+                                                className="hover:text-gray-700"
+                                                onClick={() => {
+                                                    setSelectDept(dept);
+                                                    setDeptDeleteModalOpen(true);
+                                                }}
+                                            />
+                                        </div>
                                     </div>
 
                                     {!isLast && <div className="w-full h-[1px] bg-gray-200" />}
@@ -347,6 +381,32 @@ export default function AdminDeptPage() {
                 </div>)
                 : (<OrganizationChart organization={orgDepartment} />)
             }
+
+            {createDeptModalOpen &&
+                (
+                    <CreateDeptModal
+                        fetchDeptData={fetchDeptData}
+                        onClose={() => setCreateDeptModalOpen(false)}
+                        managerCandidates={managerCandidates} />
+                )
+            }
+
+            {deptEditModalOpen && selectDept && (
+                <EditDeptModal
+                    department={selectDept}
+                    fetchDeptData={fetchDeptData}
+                    onClose={() => setDeptEditModalOpen(false)}
+                    managerCandidates={managerCandidates}
+                />
+            )}
+
+            {deptDeleteModalOpen && selectDept && (
+                <DeleteDeptModal
+                    department={selectDept}
+                    fetchDeptData={fetchDeptData}
+                    onClose={() => setDeptDeleteModalOpen(false)}
+                />
+            )}
         </div>
     )
 }

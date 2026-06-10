@@ -162,6 +162,21 @@ export async function GET(request: Request) {
         },
     })
 
+    const managerCandidates = await prisma.user.findMany({
+        where: {
+            companyId: admin.companyId,
+        },
+        select: {
+            id: true,
+            name: true,
+            department: true,
+            position: true,
+        },
+        orderBy: {
+            name: "asc",
+        }
+    })
+
     const orgDepartments = await prisma.department.findMany({
         where: { companyId: admin.companyId },
         select: {
@@ -208,6 +223,7 @@ export async function GET(request: Request) {
             departments: organizationData,
         },
         managerOptions,
+        managerCandidates,
         deptTotal,
         assignedManagerTotal,
         unassignedManagerTotal,
@@ -310,6 +326,17 @@ export async function POST(request: Request) {
             }
         },
     });
+
+    await prisma.adminActivityLog.create({
+        data: {
+            adminId: userId,
+            companyId: admin.companyId,
+            type: "default",
+            message: `관리자가 부서 ${department.name}팀을 추가했습니다.`,
+            targetId: department.id,
+            targetType: "department",
+        }
+    })
 
     return NextResponse.json(
         {
