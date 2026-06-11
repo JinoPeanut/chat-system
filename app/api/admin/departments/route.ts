@@ -332,7 +332,7 @@ export async function POST(request: Request) {
             adminId: userId,
             companyId: admin.companyId,
             type: "default",
-            message: `관리자가 부서 ${department.name}팀을 추가했습니다.`,
+            message: `관리자가 부서 ${department.name}을 추가했습니다.`,
             targetId: department.id,
             targetType: "department",
         }

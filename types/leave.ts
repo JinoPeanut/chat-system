@@ -28,3 +28,21 @@ export type LeaveHistory = {
     status: LeaveStatus,
     createdAt: string,
 }
+
+export type AdminLeave = {
+    id: string,
+    userId: string,
+    createdAt: string,
+    leaveDate: string,
+    leaveType: LeaveType,
+    usedDays: number,
+    usedHours: number,
+    status: LeaveStatus,
+    reason: string | null,
+    user: {
+        name: string,
+        department: string,
+        position: string,
+        profilePic: string | null,
+    }
+}

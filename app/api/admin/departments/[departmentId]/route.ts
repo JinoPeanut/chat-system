@@ -126,7 +126,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ de
                 adminId: userId,
                 companyId: admin.companyId,
                 type: "default",
-                message: `관리자가 부서 ${updateDepartment.name}팀을 수정했습니다.`,
+                message: `관리자가 부서 ${updateDepartment.name}을 수정했습니다.`,
                 targetId: updateDepartment.id,
                 targetType: "department",
             }
@@ -206,7 +206,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
                 adminId: userId,
                 companyId: admin.companyId,
                 type: "default",
-                message: `관리자가 부서 ${deleteDepartment.name}팀을 삭제했습니다.`,
+                message: `관리자가 부서 ${deleteDepartment.name}을 삭제했습니다.`,
                 targetId: deleteDepartment.id,
                 targetType: "department",
             }

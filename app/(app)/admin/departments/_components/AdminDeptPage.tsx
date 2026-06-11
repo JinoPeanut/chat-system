@@ -92,6 +92,8 @@ export default function AdminDeptPage() {
     const [deptEditModalOpen, setDeptEditModalOpen] = useState(false);
     const [deptDeleteModalOpen, setDeptDeleteModalOpen] = useState(false);
 
+    const [isProcessing, setIsProcessing] = useState(false);
+
     const deptCardField: DeptCardField[] = [
         { label: "전체 부서 수", icon: Building2Icon, iconColor: "text-violet-500", bgColor: "bg-violet-200", total: deptTotal.departmentTotal, description: "전체 부서" },
         { label: "부서장 지정 완료", icon: UserCheck2Icon, iconColor: "text-green-500", bgColor: "bg-green-200", total: deptTotal.assignedManagerTotal, percent: deptPercent.assignedTotalPercent },
@@ -114,6 +116,8 @@ export default function AdminDeptPage() {
     )?.label;
 
     const fetchDeptData = async () => {
+        if (isProcessing) return;
+        setErrorMessage("");
 
         const params = new URLSearchParams({
             page: String(page),
@@ -134,6 +138,8 @@ export default function AdminDeptPage() {
 
 
         try {
+            setIsProcessing(true);
+
             const res = await fetch(`/api/admin/departments?${params.toString()}`);
             const data: AdminDepartmentsResponse = await res.json();
 
@@ -157,7 +163,9 @@ export default function AdminDeptPage() {
             })
             setTotalPages(data.totalPages);
         } catch (error) {
-            setErrorMessage("")
+            setErrorMessage("서버와 연결할 수 없습니다.")
+        } finally {
+            setIsProcessing(false);
         }
     }
 
@@ -174,13 +182,13 @@ export default function AdminDeptPage() {
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => setDeptTabs("dept")}
-                        className={`px-3 py-2 ${deptTabs === "dept" ? "border-b-2 border-violet-500 text-violet-500" : "border-b-2 border-transparent text-black"}`}
+                        className={`px-3 py-2 ${deptTabs === "dept" ? "border-b-3 border-violet-500 text-violet-500" : "border-b-2 border-transparent text-black"}`}
                     >
                         부서 목록
                     </button>
                     <button
                         onClick={() => setDeptTabs("organ")}
-                        className={`px-3 py-2 ${deptTabs === "organ" ? "border-b-2 border-violet-500 text-violet-500" : "border-b-2 border-transparent text-black"}`}
+                        className={`px-3 py-2 ${deptTabs === "organ" ? "border-b-3 border-violet-500 text-violet-500" : "border-b-2 border-transparent text-black"}`}
                     >
                         조직도 보기
                     </button>
