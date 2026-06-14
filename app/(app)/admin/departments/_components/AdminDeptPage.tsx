@@ -229,7 +229,10 @@ export default function AdminDeptPage() {
                             )
                         })}
                     </div>
+
                     <div className="flex items-center gap-3 mt-5">
+
+                        {/* 부서 검색 */}
                         <div className="flex border border-gray-300 rounded-lg p-2">
                             <input
                                 value={keyword}

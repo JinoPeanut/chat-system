@@ -8,6 +8,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ le
     const { leaveId } = await params;
     const cookieStore = await cookies();
     const userId = cookieStore.get("auth_user_id")?.value;
+    const today = new Date();
+    const todayText = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
     if (!userId) {
         return NextResponse.json({ message: "로그인 정보 없음" }, { status: 401 })
@@ -63,6 +65,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ le
             { message: "처리할 연차 신청을 찾을 수 없습니다." },
             { status: 404 }
         );
+    }
+
+    if (status === LeaveStatus.approved && leave.leaveDate < todayText) {
+        return NextResponse.json(
+            { message: "이미 지난 연차는 승인할 수 없습니다." },
+            { status: 400 }
+        )
     }
 
     if (leave.status !== LeaveStatus.pending) {

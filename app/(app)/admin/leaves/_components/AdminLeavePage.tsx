@@ -1,17 +1,33 @@
 "use client"
 
 import { usePagination } from "@/hooks/notice/usePagination";
-import { AdminLeave } from "@/types/leave";
-import { useEffect, useState } from "react";
+import { AdminLeave, LeaveStatus } from "@/types/leave";
+import { formatCreatedAt } from "@/utils/dateUtils";
+import { getLeaveStatus, getLeaveStatusCard, getLeaveTypeText } from "@/utils/statusUtils";
+import { CalendarDaysIcon, ChevronDown, ChevronRight, RefreshCcw } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+
+type DepartmentOption = {
+    id: string;
+    name: string;
+};
 
 type AdminLeaveResponse = {
     message: string,
     leaves: AdminLeave[],
+    departmentOptions: DepartmentOption[],
     page: number,
     limit: number,
     leaveTotal: number,
     totalPages: number,
 }
+
+const statusOptions = [
+    { label: "전체 상태", value: "" },
+    { label: "대기", value: "pending" },
+    { label: "승인", value: "approved" },
+    { label: "반려", value: "rejected" },
+] as const;
 
 export default function AdminLeavePage() {
     const LIMIT = 7;
@@ -25,10 +41,22 @@ export default function AdminLeavePage() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
 
-    const [selectStatus, setSelectStatus] = useState("");
+    const [selectStatus, setSelectStatus] = useState<LeaveStatus | "">("");
     const [selectDepartment, setSelectDepartment] = useState("");
     const [periodStart, setPeriodStart] = useState("");
     const [periodEnd, setPeriodEnd] = useState("");
+
+    const [selectOpen, setSelectOpen] = useState({
+        status: false,
+        dept: false,
+        periodStart: false,
+        periodEnd: false,
+    })
+
+    const [departmentOptions, setDepartmentOptions] = useState<DepartmentOption[]>([]);
+
+    const startDateRef = useRef<HTMLInputElement>(null);
+    const endDateRef = useRef<HTMLInputElement>(null);
 
     const fetchLeaveData = async () => {
         if (isProcessing) return;
@@ -67,6 +95,7 @@ export default function AdminLeavePage() {
             }
 
             setLeave(data.leaves);
+            setDepartmentOptions(data.departmentOptions);
             setTotalPages(data.totalPages);
 
         } catch (error) {
@@ -76,8 +105,36 @@ export default function AdminLeavePage() {
         }
     }
 
-    useEffect(() => {
+    const handleSubmitLeave = async (leaveId: string, status: "approved" | "rejected") => {
+        if (isProcessing) return;
+        setErrorMessage("");
 
+        try {
+            setIsProcessing(true);
+
+            const res = await fetch(`/api/admin/leaves/${leaveId}`, {
+                method: "PATCH",
+                headers: { "Content-type": "application/json" },
+                body: JSON.stringify({ status })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                setErrorMessage(data.message ?? "연차 변경에 실패했습니다.");
+                return;
+            }
+
+            await fetchLeaveData();
+        } catch (error) {
+            setErrorMessage("서버 연결에 실패했습니다.");
+        } finally {
+            setIsProcessing(false);
+        }
+    }
+
+    useEffect(() => {
+        fetchLeaveData();
     }, [page, selectStatus, selectDepartment, periodStart, periodEnd])
 
     return (
@@ -104,8 +161,234 @@ export default function AdminLeavePage() {
 
             {leaveTabs === "leaveApp"
                 ? (
-                    <div>
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-3">
 
+                            {/* 상태 선택 */}
+                            <div
+                                onClick={() => setSelectOpen((prev) => ({
+                                    ...prev,
+                                    status: !prev.status,
+                                }))}
+                                className="relative w-44 rounded-lg px-4 py-2 border border-gray-300"
+                            >
+                                <div className="flex gap-2 items-center">
+                                    <span className="text-center text-gray-600">{selectStatus ? getLeaveStatus(selectStatus) : "전체 상태"}</span>
+                                    {selectOpen.status ? (<ChevronRight size={18} className="absolute right-5" />) : (<ChevronDown size={18} className="absolute right-5" />)}
+                                </div>
+                                {selectOpen.status && (
+                                    <div className="absolute left-0 top-full mt-2 z-20 w-full rounded-2xl border border-gray-200 bg-white p-2 shadow-md">
+                                        {statusOptions.map((status) => {
+                                            return (
+                                                <button
+                                                    key={status.label}
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectStatus(status.value);
+                                                        setSelectOpen((prev) => ({
+                                                            ...prev,
+                                                            status: false,
+                                                        }));
+                                                        setPage(1);
+                                                    }}
+                                                    className={`mb-1 w-full rounded-full px-3 py-1 text-sm hover:bg-violet-50 cursor-pointer`}
+                                                >
+                                                    {status.label}
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* 부서 선택 */}
+                            <div
+                                onClick={() => setSelectOpen((prev) => ({
+                                    ...prev,
+                                    dept: !prev.dept,
+                                }))}
+                                className="relative w-44 rounded-lg px-4 py-2 border border-gray-300"
+                            >
+                                <div className="flex gap-2 items-center">
+                                    <span className="text-center text-gray-600">{selectDepartment ? selectDepartment : "전체 부서"}</span>
+                                    {selectOpen.dept ? (<ChevronRight size={18} className="absolute right-5" />) : (<ChevronDown size={18} className="absolute right-5" />)}
+                                </div>
+                                {selectOpen.dept && (
+                                    <div className="absolute left-0 top-full mt-2 z-20 w-full rounded-2xl border border-gray-200 bg-white p-2 shadow-md">
+                                        {departmentOptions.map((dept) => {
+                                            return (
+                                                <button
+                                                    key={dept.id}
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectDepartment(dept.name);
+                                                        setSelectOpen((prev) => ({
+                                                            ...prev,
+                                                            dept: false,
+                                                        }));
+                                                        setPage(1);
+                                                    }}
+                                                    className={`mb-1 w-full rounded-full px-3 py-1 text-sm hover:bg-violet-50 cursor-pointer`}
+                                                >
+                                                    {dept.name}
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* 날짜 선택 */}
+                            <div className="flex items-center gap-2 rounded-lg px-4 py-2 border border-gray-300">
+
+                                <button
+                                    type="button"
+                                    onClick={() => startDateRef.current?.showPicker()}
+                                    className="text-sm text-gray-600 w-22"
+                                >
+                                    {periodStart || "시작일"}
+                                </button>
+
+                                <span className="text-gray-400">~</span>
+
+                                <button
+                                    type="button"
+                                    onClick={() => endDateRef.current?.showPicker()}
+                                    className="text-sm text-gray-600 w-22"
+                                >
+                                    {periodEnd || "종료일"}
+                                </button>
+
+                                <CalendarDaysIcon size={18} className="text-gray-600" />
+
+                                <input
+                                    ref={startDateRef}
+                                    type="date"
+                                    value={periodStart}
+                                    onChange={(e) => {
+                                        const nextStart = e.target.value;
+
+                                        if (periodEnd && nextStart > periodEnd) {
+                                            setErrorMessage("시작일은 종료일보다 늦을 수 없습니다");
+                                            return;
+                                        }
+
+                                        setPeriodStart(nextStart);
+                                        setPage(1);
+                                    }}
+                                    className="date-input-clean w-[110px] sr-only outline-none text-sm text-gray-600"
+                                />
+
+                                <input
+                                    ref={endDateRef}
+                                    type="date"
+                                    value={periodEnd}
+                                    onChange={(e) => {
+                                        const nextEnd = e.target.value;
+
+                                        if (periodStart && nextEnd > periodStart) {
+                                            setErrorMessage("종료일은 시작일보다 빠를 수 없습니다");
+                                        }
+                                        setPeriodEnd(nextEnd);
+                                        setPage(1);
+                                    }}
+                                    className="date-input-clean w-[110px] sr-only outline-none text-sm text-gray-600"
+                                />
+                            </div>
+
+                            {/* 선택 초기화 버튼 */}
+                            <button
+                                onClick={() => {
+                                    setSelectStatus("");
+                                    setSelectDepartment("");
+                                    setPeriodStart("");
+                                    setPeriodEnd("");
+                                    setPage(1);
+                                }}
+                                className="cursor-pointer text-gray-500 hover:text-gray-700"
+                            >
+                                <RefreshCcw className="refresh-icon" />
+                            </button>
+                        </div>
+
+                        {/* 연차 관리 대시보드 */}
+                        <div className="grid grid-cols-[150px_130px_150px_200px_1fr_200px_200px_150px] mt-3
+                            border-t border-l border-r border-gray-300 rounded-t-lg px-4 py-2">
+                            <p>신청일</p>
+                            <p>신청자</p>
+                            <p>부서</p>
+                            <p>연차 유형</p>
+                            <p>기간</p>
+                            <p className="text-end">사용 일수</p>
+                            <p className="text-center">상태</p>
+                            <p className="text-center">작업</p>
+                        </div>
+
+                        <div className="flex flex-col border border-gray-300 rounded-b-lg px-4 bg-white">
+                            {leave.map((item, index) => {
+                                const isLast = index === leave.length - 1;
+                                return (
+                                    <div key={item.id}>
+                                        <div className="grid grid-cols-[150px_130px_150px_200px_1fr_200px_200px_150px] items-center py-3">
+                                            <p>{formatCreatedAt(item.createdAt)}</p>
+                                            <p>{item.user.name}</p>
+                                            <p>{item.user.department}</p>
+                                            <p>{getLeaveTypeText(item.leaveType)}</p>
+                                            <p>{formatCreatedAt(item.leaveDate)}</p>
+                                            <p className="text-end">
+                                                {item.leaveType === "annual" ? `${item.usedDays}일` : `${item.usedHours}시간`}
+                                            </p>
+                                            <div className={`inline-flex justify-self-center rounded-lg px-2 py-1 w-fit ${getLeaveStatusCard(item.status)}`}>
+                                                <p className="text-center">{getLeaveStatus(item.status)}</p>
+                                            </div>
+
+                                            {item.status === "pending"
+                                                ? <div className="flex justify-center gap-5 text-gray-500">
+                                                    <button
+                                                        onClick={() => handleSubmitLeave(item.id, "approved")}
+                                                        disabled={isProcessing}
+                                                        className="border border-gray-200 px-2 py-1 rounded-lg cursor-pointer hover:text-green-500">
+                                                        승인
+                                                    </button>
+
+                                                    <button
+                                                        onClick={() => handleSubmitLeave(item.id, "rejected")}
+                                                        disabled={isProcessing}
+                                                        className="border border-gray-200 px-2 py-1 rounded-lg cursor-pointer hover:text-red-500">
+                                                        반려
+                                                    </button>
+                                                </div>
+                                                : <span className="text-gray-600 text-center">처리 완료</span>
+                                            }
+                                        </div>
+
+                                        {!isLast && <div className="w-full h-[1px] bg-gray-200" />}
+                                    </div>
+                                )
+                            })}
+                        </div>
+
+                        <div className="flex justify-center items-center gap-4 mt-4">
+                            <button
+                                onClick={prevPage}
+                                disabled={page === 1}
+                                className="px-3 py-1 border rounded disabled:opacity-40"
+                            >
+                                이전
+                            </button>
+                            <span className="text-sm font-medium">
+                                {page} / {totalPages}
+                            </span>
+                            <button
+                                onClick={nextPage}
+                                disabled={page === totalPages}
+                                className="px-3 py-1 border rounded disabled:opacity-40"
+                            >
+                                다음
+                            </button>
+                        </div>
                     </div>
                 )
                 : (
