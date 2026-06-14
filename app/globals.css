@@ -139,3 +139,14 @@
     background-size: 200% 100%;
     animation: skeleton-shimmer 0.8s ease-in-out infinite;
 }
+
+.date-input-clean::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    display: none;
+}
+
+.date-input-clean {
+    appearance: none;
+    -webkit-appearance: none;
+    min-width: 0;
+}

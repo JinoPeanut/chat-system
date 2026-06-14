@@ -6,6 +6,8 @@ import { LeaveStatus, Prisma } from "@prisma/client";
 export async function GET(request: Request) {
     const cookieStore = await cookies();
     const userId = cookieStore.get("auth_user_id")?.value;
+    const today = new Date();
+    const todayText = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
     if (!userId) {
         return NextResponse.json({ message: "로그인 정보 없음" }, { status: 401 })
@@ -31,6 +33,8 @@ export async function GET(request: Request) {
         );
     }
 
+    today.setHours(0, 0, 0, 0);
+
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, Number(searchParams.get("page") ?? 1));
     const limit = Math.min(50, Math.max(1, Number(searchParams.get("limit") ?? 7)));
@@ -38,6 +42,13 @@ export async function GET(request: Request) {
     const department = searchParams.get("department")?.trim();
     const periodStart = searchParams.get("periodStart")?.trim();
     const periodEnd = searchParams.get("periodEnd")?.trim();
+
+    if (periodStart && periodEnd && periodStart > periodEnd) {
+        return NextResponse.json(
+            { message: "시작일은 종료일보다 늦을 수 없습니다." },
+            { status: 400 }
+        );
+    }
 
     const userWhere: Prisma.UserWhereInput = {
         companyId: admin.companyId
@@ -81,6 +92,21 @@ export async function GET(request: Request) {
         }
     }
 
+    await prisma.leaveHistory.updateMany({
+        where: {
+            status: "pending",
+            leaveDate: {
+                lt: todayText,
+            },
+            user: {
+                companyId: admin.companyId,
+            }
+        },
+        data: {
+            status: "rejected",
+        }
+    })
+
     const leaveTotal = await prisma.leaveHistory.count({
         where,
     })
@@ -109,11 +135,22 @@ export async function GET(request: Request) {
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * limit,
         take: limit,
+    })
 
+    const departmentOptions = await prisma.department.findMany({
+        where: { companyId: admin.companyId },
+        select: {
+            id: true,
+            name: true,
+        },
+        orderBy: {
+            name: "asc",
+        }
     })
 
     return NextResponse.json({
         leaves,
+        departmentOptions,
         page,
         limit,
         leaveTotal,
