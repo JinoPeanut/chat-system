@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers";
 import { LeaveStatus, Prisma } from "@prisma/client";
+import { calculateAnnualLeave } from "@/utils/leaveUtils";
 
 export async function GET(request: Request) {
     const cookieStore = await cookies();
@@ -148,9 +149,60 @@ export async function GET(request: Request) {
         }
     })
 
+    const users = await prisma.user.findMany({
+        where: { companyId: admin.companyId },
+        select: {
+            id: true,
+            createdAt: true,
+        }
+    })
+
+    const allUserHaveLeaveDays = users.reduce((sum, user) => {
+        return sum + calculateAnnualLeave(user.createdAt.toISOString());
+    }, 0)
+
+    const approvedLeaves = await prisma.leaveHistory.findMany({
+        where: {
+            status: "approved",
+            user: {
+                companyId: admin.companyId,
+            }
+        },
+        select: {
+            usedDays: true,
+            usedHours: true,
+        }
+    })
+
+    const allUserUseLeaveDays = approvedLeaves.reduce((sum, leave) => {
+        return sum + leave.usedDays
+    }, 0);
+
+    const remainLeaveDays = allUserHaveLeaveDays - allUserUseLeaveDays;
+
+    const allUserUseLeaveHours = approvedLeaves.reduce((sum, leave) => {
+        return sum + leave.usedHours
+    }, 0);
+
+    const useRate = allUserHaveLeaveDays === 0
+        ? 0
+        : (allUserUseLeaveDays / allUserHaveLeaveDays) * 100;
+
+    const remainRate = allUserHaveLeaveDays === 0
+        ? 0
+        : (remainLeaveDays / allUserHaveLeaveDays) * 100;
+
     return NextResponse.json({
         leaves,
         departmentOptions,
+        summary: {
+            totalDays: allUserHaveLeaveDays,
+            usedDays: allUserUseLeaveDays,
+            remainDays: remainLeaveDays,
+            usedHours: allUserUseLeaveHours,
+            useRate,
+            remainRate,
+        },
         page,
         limit,
         leaveTotal,

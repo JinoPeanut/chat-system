@@ -4,7 +4,7 @@ import { usePagination } from "@/hooks/notice/usePagination";
 import { AdminLeave, LeaveStatus } from "@/types/leave";
 import { formatCreatedAt } from "@/utils/dateUtils";
 import { getLeaveStatus, getLeaveStatusCard, getLeaveTypeText } from "@/utils/statusUtils";
-import { CalendarDaysIcon, ChevronDown, ChevronRight, RefreshCcw } from "lucide-react";
+import { Calendar1, CalendarCheck, CalendarDaysIcon, ChevronDown, ChevronRight, Clock, RefreshCcw, User2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 type DepartmentOption = {
@@ -12,10 +12,20 @@ type DepartmentOption = {
     name: string;
 };
 
+type LeaveSummary = {
+    totalDays: number,
+    usedDays: number,
+    remainDays: number,
+    usedHours: number,
+    useRate: number,
+    remainRate: number,
+}
+
 type AdminLeaveResponse = {
     message: string,
     leaves: AdminLeave[],
     departmentOptions: DepartmentOption[],
+    summary: LeaveSummary,
     page: number,
     limit: number,
     leaveTotal: number,
@@ -52,6 +62,15 @@ export default function AdminLeavePage() {
         periodStart: false,
         periodEnd: false,
     })
+
+    const [summary, setSummary] = useState<LeaveSummary | null>(null);
+
+    const summaryCards = [
+        { title: "총 연차 보유일수", value: summary?.totalDays ?? 0, unit: "일", bgColor: "bg-violet-100", IconColor: "text-violet-500", Icon: Calendar1, subTitle: "전체 사원 기준" },
+        { title: "총 연차 사용일수", value: summary?.usedDays ?? 0, unit: "일", bgColor: "bg-green-100", IconColor: "text-green-500", Icon: User2, subTitle: `사용률 ${summary?.useRate.toFixed(1) ?? 0}%` },
+        { title: "남은 연차일수", value: summary?.remainDays ?? 0, unit: "일", bgColor: "bg-blue-100", IconColor: "text-blue-500", Icon: CalendarCheck, subTitle: `전체 대비 ${summary?.remainRate.toFixed(1) ?? 0}%` },
+        { title: "총 연차 사용시간", value: summary?.usedHours ?? 0, unit: "시간", bgColor: "bg-orange-100", IconColor: "text-orange-500", Icon: Clock, subTitle: "전체 사원 기준" },
+    ]
 
     const [departmentOptions, setDepartmentOptions] = useState<DepartmentOption[]>([]);
 
@@ -96,6 +115,7 @@ export default function AdminLeavePage() {
 
             setLeave(data.leaves);
             setDepartmentOptions(data.departmentOptions);
+            setSummary(data.summary);
             setTotalPages(data.totalPages);
 
         } catch (error) {
@@ -170,7 +190,7 @@ export default function AdminLeavePage() {
                                     ...prev,
                                     status: !prev.status,
                                 }))}
-                                className="relative w-44 rounded-lg px-4 py-2 border border-gray-300"
+                                className="relative w-44 rounded-lg px-4 py-2 border border-gray-300 bg-white"
                             >
                                 <div className="flex gap-2 items-center">
                                     <span className="text-center text-gray-600">{selectStatus ? getLeaveStatus(selectStatus) : "전체 상태"}</span>
@@ -208,7 +228,7 @@ export default function AdminLeavePage() {
                                     ...prev,
                                     dept: !prev.dept,
                                 }))}
-                                className="relative w-44 rounded-lg px-4 py-2 border border-gray-300"
+                                className="relative w-44 rounded-lg px-4 py-2 border border-gray-300 bg-white"
                             >
                                 <div className="flex gap-2 items-center">
                                     <span className="text-center text-gray-600">{selectDepartment ? selectDepartment : "전체 부서"}</span>
@@ -241,7 +261,7 @@ export default function AdminLeavePage() {
                             </div>
 
                             {/* 날짜 선택 */}
-                            <div className="flex items-center gap-2 rounded-lg px-4 py-2 border border-gray-300">
+                            <div className="flex items-center gap-2 rounded-lg px-4 py-2 border border-gray-300 bg-white">
 
                                 <button
                                     type="button"
@@ -392,7 +412,173 @@ export default function AdminLeavePage() {
                     </div>
                 )
                 : (
-                    <div></div>
+                    <div className="flex flex-col">
+                        <div className="grid grid-cols-4 gap-4">
+                            {summaryCards.map((leave) => {
+                                return (
+                                    <div key={leave.title}
+                                        className="flex items-start gap-4 bg-white rounded-lg shadow-md px-4 py-6"
+                                    >
+                                        <div className={`rounded-lg p-3 ${leave.bgColor} ${leave.IconColor}`}>
+                                            <leave.Icon size={45} />
+                                        </div>
+
+                                        <div className="flex flex-col gap-2">
+                                            <p className="text-sm text-gray-500 font-semibold">{leave.title}</p>
+                                            <div className="flex items-baseline">
+                                                <p className="text-2xl font-bold">{leave.value}</p>
+                                                <p className="text-sm font-bold">{leave.unit}</p>
+                                            </div>
+                                            <p className="text-sm text-gray-500 font-semibold">{leave.subTitle}</p>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+
+                        <div className="flex gap-4 items-center mt-5">
+
+                            {/* 부서 선택 */}
+                            <div
+                                onClick={() => setSelectOpen((prev) => ({
+                                    ...prev,
+                                    dept: !prev.dept,
+                                }))}
+                                className="relative w-44 rounded-lg px-4 py-2 border border-gray-300 bg-white"
+                            >
+                                <div className="flex gap-2 items-center">
+                                    <span className="text-center text-gray-600">{selectDepartment ? selectDepartment : "전체 부서"}</span>
+                                    {selectOpen.dept ? (<ChevronRight size={18} className="absolute right-5" />) : (<ChevronDown size={18} className="absolute right-5" />)}
+                                </div>
+                                {selectOpen.dept && (
+                                    <div className="absolute left-0 top-full mt-2 z-20 w-full rounded-2xl border border-gray-200 bg-white p-2 shadow-md">
+                                        {departmentOptions.map((dept) => {
+                                            return (
+                                                <button
+                                                    key={dept.id}
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectDepartment(dept.name);
+                                                        setSelectOpen((prev) => ({
+                                                            ...prev,
+                                                            dept: false,
+                                                        }));
+                                                        setPage(1);
+                                                    }}
+                                                    className={`mb-1 w-full rounded-full px-3 py-1 text-sm hover:bg-violet-50 cursor-pointer`}
+                                                >
+                                                    {dept.name}
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* 날짜 선택 */}
+                            <div className="flex items-center gap-2 rounded-lg px-4 py-2 border border-gray-300 bg-white">
+
+                                <button
+                                    type="button"
+                                    onClick={() => startDateRef.current?.showPicker()}
+                                    className="text-sm text-gray-600 w-22"
+                                >
+                                    {periodStart || "시작일"}
+                                </button>
+
+                                <span className="text-gray-400">~</span>
+
+                                <button
+                                    type="button"
+                                    onClick={() => endDateRef.current?.showPicker()}
+                                    className="text-sm text-gray-600 w-22"
+                                >
+                                    {periodEnd || "종료일"}
+                                </button>
+
+                                <CalendarDaysIcon size={18} className="text-gray-600" />
+
+                                <input
+                                    ref={startDateRef}
+                                    type="date"
+                                    value={periodStart}
+                                    onChange={(e) => {
+                                        const nextStart = e.target.value;
+
+                                        if (periodEnd && nextStart > periodEnd) {
+                                            setErrorMessage("시작일은 종료일보다 늦을 수 없습니다");
+                                            return;
+                                        }
+
+                                        setPeriodStart(nextStart);
+                                        setPage(1);
+                                    }}
+                                    className="date-input-clean w-[110px] sr-only outline-none text-sm text-gray-600"
+                                />
+
+                                <input
+                                    ref={endDateRef}
+                                    type="date"
+                                    value={periodEnd}
+                                    onChange={(e) => {
+                                        const nextEnd = e.target.value;
+
+                                        if (periodStart && nextEnd > periodStart) {
+                                            setErrorMessage("종료일은 시작일보다 빠를 수 없습니다");
+                                        }
+                                        setPeriodEnd(nextEnd);
+                                        setPage(1);
+                                    }}
+                                    className="date-input-clean w-[110px] sr-only outline-none text-sm text-gray-600"
+                                />
+                            </div>
+
+                            {/* 선택 초기화 버튼 */}
+                            <button
+                                onClick={() => {
+                                    setSelectStatus("");
+                                    setSelectDepartment("");
+                                    setPeriodStart("");
+                                    setPeriodEnd("");
+                                    setPage(1);
+                                }}
+                                className="cursor-pointer text-gray-500 hover:text-gray-700"
+                            >
+                                <RefreshCcw className="refresh-icon" />
+                            </button>
+                        </div>
+
+                        <div className="flex flex-col mt-5 shadow-md bg-white rounded-lg px-4 py-6">
+                            <h2 className="font-bold text-base">부서별 연차 현황</h2>
+
+                            <div className="grid grid-cols-[150px_130px_150px_200px_200px_1fr_200px] mt-3
+                            border-t border-l border-r border-gray-300 rounded-t-lg px-4 py-2 bg-gray-100">
+                                <p>부서명</p>
+                                <p>보유일수</p>
+                                <p>사용일수</p>
+                                <p>남은일수</p>
+                                <p>사용률</p>
+                                <p>평균 사용일수</p>
+                                <p>상세</p>
+                            </div>
+
+                            <div className="flex flex-col border border-gray-300 rounded-b-lg px-4 bg-white">
+                                {leave.map((item, index) => {
+                                    const isLast = index === leave.length - 1;
+                                    return (
+                                        <div key={item.id}>
+                                            <div className="grid grid-cols-[150px_130px_150px_200px_1fr_200px_200px_150px] items-center py-3">
+
+                                            </div>
+
+                                            {!isLast && <div className="w-full h-[1px] bg-gray-200" />}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    </div>
                 )
             }
         </div>
