@@ -5,13 +5,13 @@ import { User } from "@/types/chat"
 import { getStatusCardColor, getStatusColor, getStatusText } from "@/utils/statusUtils"
 import { useState } from "react"
 import { ChevronDown, ChevronRight } from "lucide-react"
-import { Department } from "@/types/department"
+import { DepartmentOption } from "@/types/department"
 import { formatCreatedAt } from "@/utils/dateUtils"
 
 type AdminUserEditModalProps = {
     user: User,
     onClose: () => void,
-    departments: Department[],
+    departmentOptions: DepartmentOption[],
     positionOptions: string[],
     onSuccess: () => Promise<void>,
 }
@@ -21,7 +21,7 @@ const userRoleField = [
     { role: "ADMIN" },
 ] as const
 
-export default function AdminUserEditModal({ user, onClose, departments, positionOptions, onSuccess }: AdminUserEditModalProps) {
+export default function AdminUserEditModal({ user, onClose, departmentOptions, positionOptions, onSuccess }: AdminUserEditModalProps) {
 
     const [isProcessing, setIsProcessing] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
@@ -158,7 +158,7 @@ export default function AdminUserEditModal({ user, onClose, departments, positio
 
                                     {editOpen.department && (
                                         <div className="absolute left-0 top-full mt-2 z-20 w-full rounded-xl border border-gray-200 bg-white p-2 shadow-md">
-                                            {departments.map((department) => {
+                                            {departmentOptions.map((department) => {
                                                 return (
                                                     <button
                                                         key={department.id}

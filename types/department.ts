@@ -6,6 +6,12 @@ export type Department = {
     members: User[], // 부서 인원
 }
 
+// 관리자용 타입
+export type DepartmentOption = {
+    id: string;
+    name: string;
+};
+
 export type AdminDepartment = {
     id: string,
     name: string,
