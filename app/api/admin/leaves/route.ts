@@ -153,7 +153,17 @@ export async function GET(request: Request) {
         where: { companyId: admin.companyId },
         select: {
             id: true,
+            department: true,
             createdAt: true,
+            leaveHistory: {
+                where: {
+                    status: "approved",
+                },
+                select: {
+                    usedDays: true,
+                    usedHours: true,
+                }
+            }
         }
     })
 
@@ -192,6 +202,61 @@ export async function GET(request: Request) {
         ? 0
         : (remainLeaveDays / allUserHaveLeaveDays) * 100;
 
+    const departments = await prisma.department.findMany({
+        where: {
+            companyId: admin.companyId,
+            ...(department ? { name: department } : {}),
+        },
+        select: {
+            id: true,
+            name: true,
+        },
+        orderBy: { name: "asc" },
+    })
+
+    const departmentStats = departments.map((dept) => {
+        const departmentUsers = users.filter((user) => user.department === dept.name);
+
+        const totalDays = departmentUsers.reduce((sum, user) => {
+            return sum + calculateAnnualLeave(user.createdAt.toISOString());
+        }, 0);
+
+        const usedDays = departmentUsers.reduce((sum, user) => {
+            const userUsedDays = user.leaveHistory.reduce((leaveSum, leave) => {
+                return leaveSum + leave.usedDays;
+            }, 0)
+
+            return sum + userUsedDays;
+        }, 0);
+
+        // 나중에 시간 관련 사용하면 return 에 추가하기.
+        const usedHours = departmentUsers.reduce((sum, user) => {
+
+            const userUsedHours = user.leaveHistory.reduce((leaveSum, leave) => {
+                return leaveSum + leave.usedHours;
+            }, 0)
+
+            return sum + userUsedHours;
+        }, 0);
+
+        const remainDays = totalDays - usedDays;
+
+        const useRate = totalDays === 0 ? 0 : (usedDays / totalDays) * 100;
+
+        const averageUsedDays = departmentUsers.length === 0 ? 0 : usedDays / departmentUsers.length;
+
+        return {
+            departmentId: dept.id,
+            department: dept.name,
+            totalDays,
+            usedDays,
+            remainDays,
+            useRate,
+            averageUsedDays,
+        }
+    }
+    )
+
     return NextResponse.json({
         leaves,
         departmentOptions,
@@ -207,5 +272,6 @@ export async function GET(request: Request) {
         limit,
         leaveTotal,
         totalPages: Math.max(1, Math.ceil(leaveTotal / limit)),
+        departmentStats,
     })
 }
