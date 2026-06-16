@@ -2,7 +2,7 @@
 
 import { usePagination } from "@/hooks/notice/usePagination";
 import { User, UserStatus } from "@/types/chat";
-import { Department } from "@/types/department";
+import { Department, DepartmentOption } from "@/types/department";
 import { getStatusCardColor, getStatusColor, getStatusText } from "@/utils/statusUtils";
 import { ChevronDown, ChevronRight, Edit, RefreshCcw, Search } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -20,7 +20,9 @@ export default function AdminUserPage() {
     const LIMIT = 7;
 
     const [keyword, setKeyword] = useState("");
-    const [departments, setDepartments] = useState<Department[]>([]);
+    const [departmentOptions, setDepartmentOptions] = useState<DepartmentOption[]>([]);
+    const [departmentGroups, setDepartmentGroups] = useState<Department[]>([]);
+
     const [selectDepartment, setSelectDepartment] = useState("");
     const [departmentSelectOpen, setDepartmentSelectOpen] = useState(false);
 
@@ -39,7 +41,7 @@ export default function AdminUserPage() {
 
     const positionOptions = Array.from(
         new Set(
-            departments.flatMap((department) =>
+            departmentGroups.flatMap((department) =>
                 department.members.map((member) => member.position)
             )
         )
@@ -108,7 +110,19 @@ export default function AdminUserPage() {
             return;
         }
 
-        setDepartments(data);
+        setDepartmentGroups(data);
+    }
+
+    const fetchDepartmentOptions = async () => {
+        const res = await fetch("/api/admin/departments/options");
+        const data = await res.json();
+
+        if (!res.ok) {
+            setErrorMessage(data.message ?? "부서 목록을 불러올 수 없습니다.");
+            return;
+        }
+
+        setDepartmentOptions(data.departmentOptions);
     }
 
     useEffect(() => {
@@ -117,6 +131,7 @@ export default function AdminUserPage() {
 
     useEffect(() => {
         fetchDepartmentData();
+        fetchDepartmentOptions();
     }, [])
 
     return (
@@ -151,7 +166,7 @@ export default function AdminUserPage() {
                     </div>
                     {departmentSelectOpen && (
                         <div className="absolute left-0 top-full mt-2 z-20 w-full rounded-2xl border border-gray-200 bg-white p-2 shadow-md">
-                            {departments.map((department) => {
+                            {departmentOptions.map((department) => {
                                 return (
                                     <button
                                         key={department.id}
@@ -319,7 +334,7 @@ export default function AdminUserPage() {
                 <AdminUserEditModal
                     user={selectUser}
                     onClose={() => setIsEditModalOpen(false)}
-                    departments={departments}
+                    departmentOptions={departmentOptions}
                     positionOptions={positionOptions}
                     onSuccess={fetchUserData}
                 />

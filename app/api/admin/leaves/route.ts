@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers";
 import { LeaveStatus, Prisma } from "@prisma/client";
+import { calculateAnnualLeave } from "@/utils/leaveUtils";
 
 export async function GET(request: Request) {
     const cookieStore = await cookies();
@@ -148,12 +149,129 @@ export async function GET(request: Request) {
         }
     })
 
+    const users = await prisma.user.findMany({
+        where: { companyId: admin.companyId },
+        select: {
+            id: true,
+            department: true,
+            createdAt: true,
+            leaveHistory: {
+                where: {
+                    status: "approved",
+                },
+                select: {
+                    usedDays: true,
+                    usedHours: true,
+                }
+            }
+        }
+    })
+
+    const allUserHaveLeaveDays = users.reduce((sum, user) => {
+        return sum + calculateAnnualLeave(user.createdAt.toISOString());
+    }, 0)
+
+    const approvedLeaves = await prisma.leaveHistory.findMany({
+        where: {
+            status: "approved",
+            user: {
+                companyId: admin.companyId,
+            }
+        },
+        select: {
+            usedDays: true,
+            usedHours: true,
+        }
+    })
+
+    const allUserUseLeaveDays = approvedLeaves.reduce((sum, leave) => {
+        return sum + leave.usedDays
+    }, 0);
+
+    const remainLeaveDays = allUserHaveLeaveDays - allUserUseLeaveDays;
+
+    const allUserUseLeaveHours = approvedLeaves.reduce((sum, leave) => {
+        return sum + leave.usedHours
+    }, 0);
+
+    const useRate = allUserHaveLeaveDays === 0
+        ? 0
+        : (allUserUseLeaveDays / allUserHaveLeaveDays) * 100;
+
+    const remainRate = allUserHaveLeaveDays === 0
+        ? 0
+        : (remainLeaveDays / allUserHaveLeaveDays) * 100;
+
+    const departments = await prisma.department.findMany({
+        where: {
+            companyId: admin.companyId,
+            ...(department ? { name: department } : {}),
+        },
+        select: {
+            id: true,
+            name: true,
+        },
+        orderBy: { name: "asc" },
+    })
+
+    const departmentStats = departments.map((dept) => {
+        const departmentUsers = users.filter((user) => user.department === dept.name);
+
+        const totalDays = departmentUsers.reduce((sum, user) => {
+            return sum + calculateAnnualLeave(user.createdAt.toISOString());
+        }, 0);
+
+        const usedDays = departmentUsers.reduce((sum, user) => {
+            const userUsedDays = user.leaveHistory.reduce((leaveSum, leave) => {
+                return leaveSum + leave.usedDays;
+            }, 0)
+
+            return sum + userUsedDays;
+        }, 0);
+
+        // 나중에 시간 관련 사용하면 return 에 추가하기.
+        const usedHours = departmentUsers.reduce((sum, user) => {
+
+            const userUsedHours = user.leaveHistory.reduce((leaveSum, leave) => {
+                return leaveSum + leave.usedHours;
+            }, 0)
+
+            return sum + userUsedHours;
+        }, 0);
+
+        const remainDays = totalDays - usedDays;
+
+        const useRate = totalDays === 0 ? 0 : (usedDays / totalDays) * 100;
+
+        const averageUsedDays = departmentUsers.length === 0 ? 0 : usedDays / departmentUsers.length;
+
+        return {
+            departmentId: dept.id,
+            department: dept.name,
+            totalDays,
+            usedDays,
+            remainDays,
+            useRate,
+            averageUsedDays,
+        }
+    }
+    )
+
     return NextResponse.json({
         leaves,
         departmentOptions,
+        summary: {
+            totalDays: allUserHaveLeaveDays,
+            usedDays: allUserUseLeaveDays,
+            remainDays: remainLeaveDays,
+            usedHours: allUserUseLeaveHours,
+            useRate,
+            remainRate,
+        },
         page,
         limit,
         leaveTotal,
         totalPages: Math.max(1, Math.ceil(leaveTotal / limit)),
+        departmentStats,
     })
 }
