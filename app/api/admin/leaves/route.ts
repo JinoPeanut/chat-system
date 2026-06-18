@@ -7,8 +7,6 @@ import { calculateAnnualLeave } from "@/utils/leaveUtils";
 export async function GET(request: Request) {
     const cookieStore = await cookies();
     const userId = cookieStore.get("auth_user_id")?.value;
-    const today = new Date();
-    const todayText = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
     if (!userId) {
         return NextResponse.json({ message: "로그인 정보 없음" }, { status: 401 })
@@ -33,8 +31,6 @@ export async function GET(request: Request) {
             { status: 403 }
         );
     }
-
-    today.setHours(0, 0, 0, 0);
 
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, Number(searchParams.get("page") ?? 1));
@@ -92,21 +88,6 @@ export async function GET(request: Request) {
             where.createdAt.lt = endDate;
         }
     }
-
-    await prisma.leaveHistory.updateMany({
-        where: {
-            status: "pending",
-            leaveDate: {
-                lt: todayText,
-            },
-            user: {
-                companyId: admin.companyId,
-            }
-        },
-        data: {
-            status: "rejected",
-        }
-    })
 
     const leaveTotal = await prisma.leaveHistory.count({
         where,

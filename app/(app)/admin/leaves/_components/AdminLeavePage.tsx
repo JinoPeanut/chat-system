@@ -54,6 +54,7 @@ export default function AdminLeavePage() {
     const { page, setPage, nextPage, prevPage } = usePagination({ totalPages });
 
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isInitialized, setIsInitialized] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
 
     const [selectStatus, setSelectStatus] = useState<LeaveStatus | "">("");
@@ -174,9 +175,35 @@ export default function AdminLeavePage() {
         }
     }
 
+    const initializeLeaveData = async () => {
+        try {
+            const res = await fetch("/api/admin/leaves/expire", {
+                method: "POST",
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                showErrorMessage(data.message ?? "만료 연차 처리에 실패했습니다");
+                return;
+            }
+
+        } catch (error) {
+            showErrorMessage("서버에 연결할 수 없습니다.");
+        } finally {
+            setIsInitialized(true);
+        }
+    }
+
     useEffect(() => {
+        initializeLeaveData();
+    }, [])
+
+    useEffect(() => {
+        if (!isInitialized) return;
+
         fetchLeaveData();
-    }, [page, selectStatus, selectDepartment, periodStart, periodEnd])
+    }, [isInitialized, page, selectStatus, selectDepartment, periodStart, periodEnd])
 
     return (
         <div className="relative h-[100dvh] w-full flex flex-col gap-2 px-8 py-6">

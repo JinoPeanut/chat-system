@@ -79,7 +79,7 @@ export default function LeaveDetailModal({ onClose, department }: LeaveDetailMod
                                 return (
                                     <div key={stat.type} className="flex flex-col border border-gray-200 rounded-lg p-2">
 
-                                        <div className="flex gap-2 items-center">
+                                        <div className="flex mx-auto w-36 gap-6 items-center justify-center">
                                             <Icon size={48} className={`p-2 rounded-lg ${style.bgColor} ${style.textColor}`} />
                                             <div className="flex flex-col">
                                                 <p className="text-sm text-gray-600">{stat.label}</p>
@@ -90,7 +90,7 @@ export default function LeaveDetailModal({ onClose, department }: LeaveDetailMod
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center justify-center mt-2">
+                                        <div className="flex mx-auto w-36 gap-2 items-center justify-center mt-2">
                                             <div className="flex items-center gap-1">
                                                 <div className="w-20 h-1 rounded-full bg-gray-100">
                                                     <div className={`h-full rounded-full ${style.barColor}`} style={{ width: `${stat.rate}%` }} />
