@@ -123,6 +123,7 @@ model Notice {
   authorId    String
   author      User           @relation(fields: [authorId], references: [id])
   attachments NoticeAttachment[]
+  viewCount   Int            @default(0)
 
   @@index([createdAt])
 }

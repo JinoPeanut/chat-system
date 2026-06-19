@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers";
 import { NoticeCategory } from "@prisma/client";
+import { unlink } from "fs/promises";
+import path from "path";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ noticeId: string }> }) {
     const { noticeId } = await params;
@@ -112,5 +114,97 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ no
 
     return NextResponse.json({
         updateNotice,
+    })
+}
+
+export async function DELETE(_request: Request, { params }: { params: Promise<{ noticeId: string }> }) {
+    const { noticeId } = await params;
+
+    const cookieStore = await cookies();
+    const userId = cookieStore.get("auth_user_id")?.value;
+
+    if (!userId) {
+        return NextResponse.json({ message: "로그인 정보 없음" }, { status: 401 })
+    }
+
+    const admin = await prisma.user.findFirst({
+        where: { id: userId, },
+        select: {
+            companyId: true,
+            role: true,
+        }
+    })
+
+    if (!admin || admin.role !== "ADMIN") {
+        return NextResponse.json(
+            { message: "관리자 권한이 필요합니다." },
+            { status: 403 }
+        );
+    }
+
+    const targetNotice = await prisma.notice.findFirst({
+        where: {
+            id: noticeId,
+            author: {
+                companyId: admin.companyId,
+            }
+        },
+        select: {
+            id: true,
+            title: true,
+            attachments: {
+                select: {
+                    fileUrl: true,
+                }
+            }
+        }
+    });
+
+    if (!targetNotice) {
+        return NextResponse.json(
+            { message: "찾을 수 없는 게시글 입니다." },
+            { status: 404 }
+        )
+    }
+
+    const notice = await prisma.$transaction(async (tx) => {
+
+        const result = await tx.notice.delete({
+            where: { id: noticeId }
+        })
+
+        await tx.adminActivityLog.create({
+            data: {
+                adminId: userId,
+                companyId: admin.companyId,
+                type: "notice",
+                message: `관리자가 게시글 ${result.title}을 삭제했습니다.`,
+                targetId: result.id,
+                targetType: "notice",
+            }
+        })
+
+        return result;
+    })
+
+    await Promise.all(
+        targetNotice.attachments.map(async (attachment) => {
+            const filePath = path.join(
+                process.cwd(),
+                "public",
+                attachment.fileUrl.replace(/^\/+/, "")
+            );
+
+            try {
+                await unlink(filePath);
+            } catch (error) {
+                console.log("첨부파일 삭제 실패: ", filePath, error);
+            }
+        })
+    );
+
+    return NextResponse.json({
+        message: "게시글이 삭제 되었습니다.",
+        notice,
     })
 }

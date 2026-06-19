@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 
-export async function GET(_request: Request, { params }: { params: Promise<{ noticeId: string }> }) {
+export async function POST(_request: Request, { params }: { params: Promise<{ noticeId: string }> }) {
     const { noticeId } = await params;
     const cookieStore = await cookies();
     const userId = cookieStore.get("auth_user_id")?.value;
@@ -15,8 +15,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ not
     }
 
     const currentUser = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { companyId: true, },
+        where: {
+            id: userId,
+        },
+        select: {
+            companyId: true,
+        },
     });
 
     if (!currentUser) {
@@ -26,7 +30,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ not
         );
     }
 
-    const notice = await prisma.notice.findFirst({
+    const existingNotice = await prisma.notice.findFirst({
         where: {
             id: noticeId,
             author: {
@@ -35,37 +39,31 @@ export async function GET(_request: Request, { params }: { params: Promise<{ not
         },
         select: {
             id: true,
-            authorId: true,
-            title: true,
-            category: true,
-            createdAt: true,
-            isPinned: true,
-            content: true,
-            author: {
-                select: {
-                    name: true,
-                    profilePic: true,
-                }
-            },
-            attachments: {
-                select: {
-                    id: true,
-                    fileName: true,
-                    fileUrl: true,
-                    fileSize: true,
-                    fileType: true,
-                }
-            },
-            viewCount: true,
         },
     });
 
-    if (!notice) {
+    if (!existingNotice) {
         return NextResponse.json(
             { message: "게시글을 찾을 수 없습니다." },
             { status: 404 }
         );
     }
 
-    return NextResponse.json(notice);
+    const updatedNotice = await prisma.notice.update({
+        where: {
+            id: noticeId,
+        },
+        data: {
+            viewCount: {
+                increment: 1,
+            },
+        },
+        select: {
+            viewCount: true,
+        },
+    });
+
+    return NextResponse.json({
+        viewCount: updatedNotice.viewCount,
+    });
 }

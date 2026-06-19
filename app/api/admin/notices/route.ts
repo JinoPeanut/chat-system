@@ -125,6 +125,7 @@ export async function GET(request: Request) {
             category: true,
             isPinned: true,
             createdAt: true,
+            viewCount: true,
             author: {
                 select: {
                     id: true,
@@ -133,10 +134,10 @@ export async function GET(request: Request) {
                 }
             }
         },
-        orderBy: {
-            isPinned: "desc",
-            createdAt: "desc"
-        },
+        orderBy: [
+            { isPinned: "desc" },
+            { createdAt: "desc" },
+        ],
         skip: (page - 1) * limit,
         take: limit,
     });
