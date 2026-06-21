@@ -5,8 +5,10 @@ import { usePagination } from "@/hooks/notice/usePagination";
 import { AdminNotice, NOTICE_TABS } from "@/types/notice";
 import { formatCreatedAt } from "@/utils/dateUtils";
 import { getCategoryName, getCategoryStyle } from "@/utils/noticeUtils";
-import { CalendarDaysIcon, ChevronDown, ChevronRight, Pin, RefreshCcw, Search } from "lucide-react";
+import { CalendarDaysIcon, ChevronDown, ChevronRight, Pencil, Pin, RefreshCcw, Search, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import DeleteNoticeModal from "./DeleteNoticeModal";
 
 type AdminNoticeResponse = {
     message: string,
@@ -19,6 +21,7 @@ type AdminNoticeResponse = {
 export default function AdminNoticePage() {
     const LIMIT = 7;
     const [notices, setNotices] = useState<AdminNotice[]>([]);
+    const [selectNotice, setSelectNotice] = useState<AdminNotice | null>(null);
 
     const [errorMessage, setErrorMessage] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
@@ -32,6 +35,7 @@ export default function AdminNoticePage() {
         periodStart: false,
         periodEnd: false,
     })
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [keyword, setKeyword] = useState("");
     const [periodStart, setPeriodStart] = useState("");
     const [periodEnd, setPeriodEnd] = useState("");
@@ -87,6 +91,42 @@ export default function AdminNoticePage() {
 
         } catch (error) {
             showErrorMessage("서버에 연결할 수 없습니다.");
+        } finally {
+            setIsProcessing(false);
+        }
+    }
+
+    const onDeleteNotice = async (noticeId: string): Promise<boolean> => {
+        if (isProcessing) return false;
+
+        try {
+            setIsProcessing(true);
+
+            const res = await fetch(`/api/admin/notices/${noticeId}`, {
+                method: "DELETE",
+            })
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                showErrorMessage(data.message ?? "해당 게시물을 삭제할 수 없습니다.");
+                return false;
+            }
+
+            if (notices.length === 1 && page > 1) {
+                setPage((prev) => prev - 1);
+            } else if (page === totalPages) {
+                // 삭제 후 남은 notices 만 화면에 반영
+                setNotices((prev) => prev.filter((notice) => notice.id !== noticeId));
+            } else {
+                await fetchNoticeData();
+            }
+
+            return true;
+
+        } catch (error) {
+            showErrorMessage("서버에 연결할 수 없습니다.");
+            return false;
         } finally {
             setIsProcessing(false);
         }
@@ -272,7 +312,18 @@ export default function AdminNoticePage() {
                                 <p>{formatCreatedAt(item.createdAt)}</p>
                                 <p className="text-center">{item.viewCount}</p>
                                 <div className="flex gap-1 justify-center">
-                                    <button>1</button>
+                                    <Link href={`/notice/${item.id}/edit`}
+                                        className="rounded-lg border border-gray-200 p-2 hover:bg-gray-200 hover:text-gray-600"
+                                    >
+                                        <Pencil size={18} className="text-gray-500" />
+                                    </Link>
+                                    <button onClick={() => {
+                                        setSelectNotice(item);
+                                        setDeleteModalOpen(true);
+                                    }}
+                                        className="rounded-lg border border-gray-200 p-2 hover:bg-gray-200 hover:text-gray-600 cursor-pointer">
+                                        <Trash2 size={18} className="text-gray-500" />
+                                    </button>
                                 </div>
                             </div>
 
@@ -301,6 +352,16 @@ export default function AdminNoticePage() {
                     다음
                 </button>
             </div>
+
+            {deleteModalOpen && selectNotice && (
+                <DeleteNoticeModal
+                    onClose={() => setDeleteModalOpen(false)}
+                    onDeleteNotice={onDeleteNotice}
+                    notice={selectNotice}
+                    errorMessage={errorMessage}
+                    isProcessing={isProcessing}
+                />
+            )}
         </div>
     )
 }

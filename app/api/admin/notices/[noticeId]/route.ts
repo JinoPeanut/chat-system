@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers";
 import { NoticeCategory } from "@prisma/client";
-import { unlink } from "fs/promises";
+import { mkdir, unlink, writeFile } from "fs/promises";
 import path from "path";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ noticeId: string }> }) {
@@ -29,8 +29,25 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ no
         );
     }
 
-    const body = await request.json();
-    const { title, category, content, isPinned } = body;
+    const formData = await request.formData();
+    const title = formData.get("title");
+    const category = formData.get("category");
+    const content = formData.get("content");
+    const isPinned = formData.get("isPinned");
+    const files = formData.getAll("files");
+    const deletedAttachmentIds =
+        formData.getAll("deletedAttachmentIds");
+
+    // isPinned 가 formData 로 잘 받아졌는지 확인 (formData 는 항상 문자열로 저장해 받아옴)
+    if (typeof isPinned !== "string" || !["true", "false"].includes(isPinned)) {
+        return NextResponse.json(
+            { message: "고정 여부 값이 올바르지 않습니다." },
+            { status: 400 }
+        )
+    }
+
+    // 문자열로 변환된 isPinned 를 다시 boolean 으로 반환하기 위한 값
+    const isPinnedValue = isPinned === "true";
 
     if (
         typeof title !== "string" ||
@@ -49,12 +66,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ no
         );
     }
 
-    if (content !== undefined && typeof content !== "string") {
+    if (content !== null && typeof content !== "string") {
         return NextResponse.json(
             { message: "게시글 내용 형식이 올바르지 않습니다." },
             { status: 400 }
         );
     }
+
+    const contentValue = typeof content === "string" ? content : null;
 
     if (!Object.values(NoticeCategory).includes(category as NoticeCategory)) {
         return NextResponse.json(
@@ -63,12 +82,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ no
         )
     }
 
-    if (isPinned !== undefined && typeof isPinned !== "boolean") {
-        return NextResponse.json(
-            { message: "고정 여부 값이 올바르지 않습니다." },
-            { status: 400 }
-        );
-    }
+    const uploadedFiles = files.filter(
+        (file): file is File => file instanceof File
+    );
+
+    const deletedAttachmentIdList = deletedAttachmentIds.filter(
+        (id): id is string =>
+            typeof id === "string" && id.trim() !== ""
+    );
 
     const notice = await prisma.notice.findFirst({
         where: {
@@ -87,16 +108,72 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ no
         )
     }
 
+    const attachmentsToDelete = await prisma.noticeAttachment.findMany({
+        where: {
+            id: {
+                in: deletedAttachmentIdList,
+            },
+            noticeId,
+        },
+        select: {
+            id: true,
+            fileUrl: true,
+        }
+    })
+
     const updateNotice = await prisma.$transaction(async (tx) => {
         const result = await tx.notice.update({
             where: { id: noticeId },
             data: {
                 title: title.trim(),
                 category: category as NoticeCategory,
-                ...(content !== undefined && { content }),
-                ...(isPinned !== undefined && { isPinned })
+                content: contentValue,
+                isPinned: isPinnedValue,
             },
         });
+
+        if (attachmentsToDelete.length > 0) {
+            await tx.noticeAttachment.deleteMany({
+                where: {
+                    id: {
+                        in: attachmentsToDelete.map((file) => file.id)
+                    },
+                    noticeId,
+                }
+            })
+        }
+
+        if (uploadedFiles.length > 0) {
+            const uploadDir = path.join(
+                process.cwd(),
+                "public",
+                "uploads",
+                "notices"
+            );
+
+            await mkdir(uploadDir, { recursive: true });
+
+            for (const file of uploadedFiles) {
+                const bytes = await file.arrayBuffer();
+                const safeFileName =
+                    `${crypto.randomUUID()}-${file.name}`;
+
+                await writeFile(
+                    path.join(uploadDir, safeFileName),
+                    Buffer.from(bytes)
+                );
+
+                await tx.noticeAttachment.create({
+                    data: {
+                        noticeId,
+                        fileName: file.name,
+                        fileUrl: `/uploads/notices/${safeFileName}`,
+                        fileSize: file.size,
+                        fileType: file.type,
+                    },
+                });
+            }
+        }
 
         await tx.adminActivityLog.create({
             data: {
@@ -112,9 +189,27 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ no
         return result;
     })
 
-    return NextResponse.json({
-        updateNotice,
-    })
+    await Promise.all(
+        attachmentsToDelete.map(async (file) => {
+            const filePath = path.join(
+                process.cwd(),
+                "public",
+                file.fileUrl.replace(/^\/+/, "")
+            );
+
+            try {
+                await unlink(filePath);
+            } catch (error) {
+                console.error(
+                    "기존 첨부파일 삭제 실패: ",
+                    filePath,
+                    error
+                )
+            }
+        })
+    )
+
+    return NextResponse.json(updateNotice)
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ noticeId: string }> }) {
