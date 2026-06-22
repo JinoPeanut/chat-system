@@ -1,7 +1,6 @@
 "use client";
 
-import { User } from "@/types/chat";
-import { Building2Icon, Calendar, CalendarCheck, ChevronDown, ChevronRight, ClipboardCheck, FileText, Megaphone, ShieldCog, UsersRound } from "lucide-react";
+import { Building2Icon, Calendar, ChevronDown, ChevronRight, FileText, UsersRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
     Sector,
@@ -114,23 +113,15 @@ const AdminQuickMenuField = [
     },
     {
         title: "게시글 관리",
-        href: "admin/notices",
+        href: "/admin/notices",
         Icon: FileText,
         IconClassName: "bg-green-200 text-green-500",
         description: "게시판 글 관리 및 카테고리 설정",
-    },
-    {
-        title: "권한 관리",
-        href: "admin/permissions",
-        Icon: ShieldCog,
-        IconClassName: "bg-red-200 text-red-500",
-        description: "관리자 및 역할 권한 설정"
     },
 ]
 
 export default function AdminDashboard() {
     const [summary, setSummary] = useState<AdminSummary | null>(null);
-    const [users, setUsers] = useState<User[]>([]);
     const [leaveSelectOpen, setLeaveSelectOpen] = useState(false);
     const [noticeSelectOpen, setNoticeSelectOpen] = useState(false);
     const [leaveSelectedMonth, setLeaveSelectedMonth] = useState(selectField[0]);
