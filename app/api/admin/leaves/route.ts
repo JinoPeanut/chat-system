@@ -7,8 +7,6 @@ import { calculateAnnualLeave } from "@/utils/leaveUtils";
 export async function GET(request: Request) {
     const cookieStore = await cookies();
     const userId = cookieStore.get("auth_user_id")?.value;
-    const today = new Date();
-    const todayText = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
     if (!userId) {
         return NextResponse.json({ message: "로그인 정보 없음" }, { status: 401 })
@@ -33,8 +31,6 @@ export async function GET(request: Request) {
             { status: 403 }
         );
     }
-
-    today.setHours(0, 0, 0, 0);
 
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, Number(searchParams.get("page") ?? 1));
@@ -93,21 +89,6 @@ export async function GET(request: Request) {
         }
     }
 
-    await prisma.leaveHistory.updateMany({
-        where: {
-            status: "pending",
-            leaveDate: {
-                lt: todayText,
-            },
-            user: {
-                companyId: admin.companyId,
-            }
-        },
-        data: {
-            status: "rejected",
-        }
-    })
-
     const leaveTotal = await prisma.leaveHistory.count({
         where,
     })
@@ -153,15 +134,21 @@ export async function GET(request: Request) {
         where: { companyId: admin.companyId },
         select: {
             id: true,
+            name: true,
             department: true,
+            position: true,
             createdAt: true,
             leaveHistory: {
                 where: {
                     status: "approved",
                 },
                 select: {
+                    id: true,
+                    leaveDate: true,
+                    leaveType: true,
                     usedDays: true,
                     usedHours: true,
+                    reason: true,
                 }
             }
         }
@@ -210,12 +197,49 @@ export async function GET(request: Request) {
         select: {
             id: true,
             name: true,
+            manager: {
+                select: {
+                    name: true,
+                }
+            }
         },
         orderBy: { name: "asc" },
     })
 
     const departmentStats = departments.map((dept) => {
         const departmentUsers = users.filter((user) => user.department === dept.name);
+
+        const memberCount = departmentUsers.length;
+
+        const annualDays = departmentUsers.reduce((sum, user) => {
+            const userAnnual = user.leaveHistory.reduce((leaveSum, leave) => {
+                if (leave.leaveType !== "annual") return leaveSum;
+
+                return leaveSum + leave.usedDays;
+            }, 0)
+
+            return sum + userAnnual;
+        }, 0);
+
+        const halfAmDays = departmentUsers.reduce((sum, user) => {
+            const userHalfAm = user.leaveHistory.reduce((leaveSum, leave) => {
+                if (leave.leaveType !== "half_am") return leaveSum;
+
+                return leaveSum + leave.usedDays;
+            }, 0);
+
+            return sum + userHalfAm;
+        }, 0);
+
+        const halfPmDays = departmentUsers.reduce((sum, user) => {
+            const userHalfPm = user.leaveHistory.reduce((leaveSum, leave) => {
+                if (leave.leaveType !== "half_pm") return leaveSum;
+
+                return leaveSum + leave.usedDays;
+            }, 0);
+
+            return sum + userHalfPm;
+        }, 0);
 
         const totalDays = departmentUsers.reduce((sum, user) => {
             return sum + calculateAnnualLeave(user.createdAt.toISOString());
@@ -245,14 +269,55 @@ export async function GET(request: Request) {
 
         const averageUsedDays = departmentUsers.length === 0 ? 0 : usedDays / departmentUsers.length;
 
+        const annualRate = usedDays === 0 ? 0 : (annualDays / totalDays) * 100;
+        const halfAmRate = usedDays === 0 ? 0 : (halfAmDays / totalDays) * 100;
+        const halfPmRate = usedDays === 0 ? 0 : (halfPmDays / totalDays) * 100;
+
+        const recentLeaves = departmentUsers.flatMap((user) =>
+            user.leaveHistory.map((leave) => ({
+                id: leave.id,
+                position: user.position,
+                userName: user.name,
+                leaveDate: leave.leaveDate,
+                leaveType: leave.leaveType,
+                usedDays: leave.usedDays,
+                usedHours: leave.usedHours,
+                reason: leave.reason,
+            })))
+            .sort((a, b) => new Date(b.leaveDate).getTime() - new Date(a.leaveDate).getTime())
+            .slice(0, 5);
+
         return {
             departmentId: dept.id,
             department: dept.name,
+            managerName: dept.manager?.name ?? "미지정",
+            memberCount,
             totalDays,
             usedDays,
             remainDays,
             useRate,
             averageUsedDays,
+            leaveTypeStats: [
+                {
+                    type: "annual",
+                    label: "연차",
+                    days: annualDays,
+                    rate: annualRate,
+                },
+                {
+                    type: "half_am",
+                    label: "오전 반차",
+                    days: halfAmDays,
+                    rate: halfAmRate,
+                },
+                {
+                    type: "half_pm",
+                    label: "오후 반차",
+                    days: halfPmDays,
+                    rate: halfPmRate,
+                }
+            ],
+            recentLeaves,
         }
     }
     )

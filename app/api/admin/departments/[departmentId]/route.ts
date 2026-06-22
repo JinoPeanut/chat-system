@@ -174,8 +174,8 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 
     if (!targetDepartment) {
         return NextResponse.json(
-            { message: "해당 부서는 삭제할 수 없습니다." },
-            { status: 403 }
+            { message: "해당 부서를 찾을 수 없습니다." },
+            { status: 404 }
         );
     }
 

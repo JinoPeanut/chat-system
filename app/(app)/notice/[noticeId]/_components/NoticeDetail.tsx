@@ -5,7 +5,7 @@ import { Notice } from "@/types/notice";
 import { getCategoryName, getCategoryStyle } from "@/utils/noticeUtils";
 import { ChevronLeft, Clock, Download, Eye, MoreHorizontal, Paperclip, PinIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 type NoticeDetailProps = {
     noticeId: string,
@@ -20,6 +20,8 @@ export default function NoticeDetail({ noticeId }: NoticeDetailProps) {
     const [isDeleting, setIsDeleting] = useState(false);
     const [toastMessage, setToastMessage] = useState("")
     const [toastType, setToastType] = useState<"error" | "success">("success");
+
+    const countedNoticeIdRef = useRef<string | null>(null);
 
     const notice_title = notice ? notice.title : "제목 없음";
     const notice_category = notice ? notice.category : "카테고리 없음";
@@ -41,6 +43,7 @@ export default function NoticeDetail({ noticeId }: NoticeDetailProps) {
         return `${year}.${month}.${day} ${hour}:${minute}`;
     }
 
+    // 중복함수가 여럿 보임(util 로 뺄 필요 있음)
     const showToast = (message: string, type: "success" | "error") => {
         if (toastMessage) return;
 
@@ -52,6 +55,7 @@ export default function NoticeDetail({ noticeId }: NoticeDetailProps) {
         }, 1500);
     }
 
+    // 게시글 목록 조회담당 함수
     const fetchNoticeDetail = async () => {
         const res = await fetch(`/api/notice/${noticeId}`);
         const data = await res.json();
@@ -97,12 +101,38 @@ export default function NoticeDetail({ noticeId }: NoticeDetailProps) {
         } finally {
             setIsDeleting(false);
         }
-
     }
 
+    // 조회수 증가 담당함수
+    const increaseViewCount = async () => {
+        const res = await fetch(`/api/notice/${noticeId}/view`, {
+            method: "POST"
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.message ?? "조회수 증가에 실패했습니다.");
+        }
+    }
+
+    const initializeNoticeDetail = async () => {
+        try {
+            await increaseViewCount();
+        } catch (error) {
+            console.error(error);
+        } finally {
+            await fetchNoticeDetail();
+        }
+    };
+
     useEffect(() => {
-        fetchNoticeDetail();
-    }, [])
+        if (countedNoticeIdRef.current === noticeId) return;
+
+        countedNoticeIdRef.current = noticeId;
+
+        initializeNoticeDetail();
+    }, [noticeId])
 
     return (
         <div className="h-[100dvh] flex flex-col gap-4 px-8 py-6 bg-white rounded-md">
@@ -190,8 +220,7 @@ export default function NoticeDetail({ noticeId }: NoticeDetailProps) {
 
                 <div className="flex items-center gap-1 text-gray-500">
                     <Eye size={14} />
-                    {/* 조회수 DB 컬럼에 꼭 추가하기 */}
-                    {/* viewCount   Int     @default(0) */}
+                    <p>{notice?.viewCount ?? 0}</p>
                 </div>
             </div>
 

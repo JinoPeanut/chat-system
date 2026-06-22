@@ -212,10 +212,14 @@ export default function NoticeInputPanel({ mode, noticeId }: NoticeInputPanelPro
             formData.append("files", file);
         });
 
+        const patchUrl = authUser?.role === "ADMIN"
+            ? `/api/admin/notices/${noticeId}`
+            : "/api/notice";
+
         try {
             setIsProcessing(true);
 
-            const res = await fetch("/api/notice", {
+            const res = await fetch(patchUrl, {
                 method: "PATCH",
                 body: formData,
             });

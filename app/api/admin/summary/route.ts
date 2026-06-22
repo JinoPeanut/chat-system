@@ -79,14 +79,12 @@ export async function GET(request: NextRequest) {
         },
     })
 
-    const userForDepartment = await prisma.user.findMany({
-        where: { companyId: currentUser.companyId },
-        select: { department: true }
-    });
-
-    const departmentTotal = new Set(
-        userForDepartment.map((user) => user.department).filter(Boolean)
-    ).size;
+    // 부서의 갯수
+    const departmentTotal = await prisma.department.count({
+        where: {
+            companyId: currentUser.companyId
+        }
+    })
 
     // 연차 API 영역
     const thisMonthPendingLeaveTotal = await prisma.leaveHistory.count({

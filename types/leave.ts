@@ -46,3 +46,37 @@ export type AdminLeave = {
         profilePic: string | null,
     }
 }
+
+// 관리자 부서별 연차 조회 사용내역 타입
+export type RecentDepartmentLeave = {
+    id: string,
+    userName: string,
+    position: string,
+    leaveDate: string,
+    leaveType: LeaveType,
+    usedDays: number,
+    usedHours: number,
+    reason: string | null,
+};
+
+export type LeaveTypeStat = {
+    type: LeaveType,
+    label: string,
+    days: number,
+    rate: number,
+};
+
+// 관리자 각 부서 연차 계산 타입
+export type DepartmentLeaveStat = {
+    departmentId: string,
+    department: string,
+    managerName: string,
+    memberCount: number,
+    totalDays: number,
+    usedDays: number,
+    remainDays: number,
+    useRate: number,
+    averageUsedDays: number,
+    leaveTypeStats: LeaveTypeStat[],
+    recentLeaves: RecentDepartmentLeave[],
+}

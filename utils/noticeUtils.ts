@@ -6,6 +6,7 @@ export const getCategoryStyle = (category: string) => {
 }
 
 export const getCategoryName = (category: string) => {
+    if (category === "all") return "전체"
     if (category === "notice") return "공지사항"
     if (category === "event") return "이벤트"
     if (category === "update") return "업데이트"

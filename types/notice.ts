@@ -11,11 +11,6 @@ export const NOTICE_TABS: { key: NoticeScope; label: string }[] = [
     { key: "etc", label: "기타" },
 ];
 
-export type NoticeState = {
-    byId: Record<string, Notice>,
-    allIds: string[],
-}
-
 export type NoticeAttachment = {
     id: string;
     fileName: string;
@@ -34,33 +29,19 @@ export type Notice = {
     isPinned?: boolean;         // 상단 고정 필요하면
     author?: User;
     attachments?: NoticeAttachment[];
+    viewCount: number;
 };
 
-export const NOTICE: NoticeState = {
-    byId: {
-        n1: {
-            id: "n1",
-            category: "notice",
-            title: "근로자의 날 휴무 안내",
-            content: "5월 1일은 전사 휴무입니다.",
-            authorId: "user-3",
-            createdAt: "2026-04-18T09:00:00.000Z",
-            isPinned: true,
-        },
-        n2: {
-            id: "n2",
-            category: "event",
-            title: "사내 워크샵 참가 신청",
-            authorId: "user-2",
-            createdAt: "2026-04-17T03:30:00.000Z",
-        },
-        n3: {
-            id: "n3",
-            category: "update",
-            title: "채팅 시스템 업데이트 v1.2",
-            authorId: "user-1",
-            createdAt: "2026-04-16T11:20:00.000Z",
-        },
-    },
-    allIds: ["n1", "n2", "n3"], // 화면 표시 순서
-};
+export type AdminNotice = {
+    id: string,
+    title: string,
+    category: NoticeCategory,
+    isPinned: boolean,
+    createdAt: string,
+    viewCount: number,
+    author: {
+        id: string,
+        name: string,
+        profilePic: string | null,
+    }
+}
