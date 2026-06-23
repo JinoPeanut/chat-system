@@ -64,7 +64,20 @@ export async function GET(request: Request) {
 
     const notice = await prisma.notice.findMany({
         where,
-        include: { author: true, attachments: true },
+        select: {
+            id: true,
+            title: true,
+            category: true,
+            isPinned: true,
+            createdAt: true,
+            author: {
+                select: {
+                    name: true,
+                    profilePic: true,
+                    position: true,
+                }
+            }
+        },
         orderBy: [
             { isPinned: "desc" },
             { createdAt: "desc" },
@@ -144,8 +157,8 @@ export async function POST(request: Request) {
             isPinned: isPinnedValue,
             authorId: userId,
         },
-        include: {
-            author: true,
+        select: {
+            id: true,
         }
     })
 
@@ -347,7 +360,9 @@ export async function PATCH(request: Request) {
 
     const updateNotice = await prisma.notice.findUnique({
         where: { id },
-        include: { author: true, attachments: true },
+        select: {
+            id: true,
+        }
     });
 
     return NextResponse.json(updateNotice);

@@ -26,11 +26,31 @@ export async function GET(request: Request,
                 }
             }
         },
-        include: {
-            members: true,
+        select: {
+            id: true,
+            room: true,
+            members: {
+                select: {
+                    id: true,
+                    name: true,
+                    profilePic: true,
+                    status: true,
+                }
+            },
             messages: {
-                include: {
-                    sender: true,
+                select: {
+                    id: true,
+                    senderId: true,
+                    chatRoomId: true,
+                    content: true,
+                    timeAt: true,
+                    sender: {
+                        select: {
+                            id: true,
+                            name: true,
+                            profilePic: true,
+                        }
+                    }
                 },
                 orderBy: {
                     timeAt: "asc",

@@ -26,9 +26,39 @@ export type Message = {
     sender?: User,
 }
 
+export type RecentChat = {
+    id: string,
+    members: {
+        id: string,
+        name: string,
+        profilePic: string | null,
+    }[],
+    messages: {
+        id: string,
+        content: string,
+        timeAt: string,
+    }[],
+}
+
 export type Chat = {
     id: string, // 방 아이디
     room: RoomType, // 방 타입
-    members: User[] | null, // 방 참여자
-    messages: Message[] | null, // 메세지들
+    members: {
+        id: string,
+        name: string,
+        profilePic: string,
+        status: UserStatus,
+    }[],
+    messages: {
+        id: string,
+        senderId: string,
+        chatRoomId: string,
+        content: string,
+        timeAt: string,
+        sender: {
+            id: string,
+            name: string,
+            profilePic: string | null,
+        }
+    }[],
 }

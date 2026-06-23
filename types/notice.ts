@@ -1,5 +1,3 @@
-import { User } from "./chat";
-
 export type NoticeCategory = "notice" | "event" | "update" | "etc";
 export type NoticeScope = "all" | "notice" | "event" | "update" | "etc";
 
@@ -19,19 +17,22 @@ export type NoticeAttachment = {
     fileType?: string | null;
 };
 
+// 게시글 목록 GET 전용 타입
 export type Notice = {
     id: string;
-    category: NoticeCategory;   // 제목 앞 [태그] 용
     title: string;
-    content?: string;           // 목록만 우선이면 optional
-    authorId: string;           // USERS와 연결
-    createdAt: string;          // 만든 시간
+    category: NoticeCategory;   // 제목 앞 [태그] 용
     isPinned?: boolean;         // 상단 고정 필요하면
-    author?: User;
-    attachments?: NoticeAttachment[];
-    viewCount: number;
+    createdAt: string;          // 만든 시간
+
+    author: {
+        name: string,
+        profilePic: string,
+        position: string,
+    }
 };
 
+// 관리자 게시글관리 목록 GET 전용 타입
 export type AdminNotice = {
     id: string,
     title: string,

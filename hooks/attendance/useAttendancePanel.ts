@@ -11,8 +11,10 @@ type useAttendancePanelProps = {
 export default function useAttendancePanel({ attendance, onRefresh }: useAttendancePanelProps) {
     const authUser = useAuthStore((state) => state.user);
 
+    // 현재 시간 표시용
     function formatKoreanTime(now: Date) {
         const parts = new Intl.DateTimeFormat("ko-KR", {
+            timeZone: "Asia/Seoul",
             year: "numeric",
             month: "numeric",
             day: "numeric",
@@ -57,18 +59,8 @@ export default function useAttendancePanel({ attendance, onRefresh }: useAttenda
     const handleCheckIn = async () => {
         if (todayAttendance?.checkInAt || !myUserId) return;
 
-        const now = new Date();
-        const checkInAt = now.getHours() * 60 + now.getMinutes();
-
         const res = await fetch("/api/attendance", {
             method: "POST",
-            headers: { "Content-type": "application/json" },
-            body: JSON.stringify({
-                date: todayKey,
-                checkInAt,
-                checkOutAt: null,
-                workMinutes: null
-            })
         });
 
         if (!res.ok) return;
@@ -79,18 +71,8 @@ export default function useAttendancePanel({ attendance, onRefresh }: useAttenda
     const handleCheckOut = async () => {
         if (!todayAttendance?.checkInAt || !myUserId) return;
 
-        const now = new Date();
-        const checkOutAt = now.getHours() * 60 + now.getMinutes();
-        const workMinutes = checkOutAt - todayAttendance.checkInAt;
-
         const res = await fetch("/api/attendance", {
             method: "PATCH",
-            headers: { "Content-type": "application/json" },
-            body: JSON.stringify({
-                date: todayKey,
-                checkOutAt,
-                workMinutes,
-            })
         });
 
         if (!res.ok) return;

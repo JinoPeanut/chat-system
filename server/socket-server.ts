@@ -83,9 +83,20 @@ io.on("connection", (socket) => {
                     chatRoomId,
                     content: content.trim(),
                 },
-                include: {
-                    sender: true,
-                },
+                select: {
+                    id: true,
+                    senderId: true,
+                    chatRoomId: true,
+                    content: true,
+                    timeAt: true,
+                    sender: {
+                        select: {
+                            id: true,
+                            name: true,
+                            profilePic: true,
+                        }
+                    }
+                }
             });
 
             io.to(chatRoomId).emit("new-message", message);
