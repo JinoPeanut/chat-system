@@ -1,7 +1,7 @@
 "use client";
 import ProfileAvatar from "@/components/common/ProfileAvatar";
 import { useAuthStore } from "@/stores/useAuthStore";
-import { Notice } from "@/types/notice";
+import { NoticeDetailType } from "@/types/notice";
 import { getCategoryName, getCategoryStyle } from "@/utils/noticeUtils";
 import { ChevronLeft, Clock, Download, Eye, MoreHorizontal, Paperclip, PinIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -15,7 +15,7 @@ export default function NoticeDetail({ noticeId }: NoticeDetailProps) {
     const authUser = useAuthStore((state) => state.user);
     const router = useRouter();
 
-    const [notice, setNotice] = useState<Notice | null>(null);
+    const [notice, setNotice] = useState<NoticeDetailType | null>(null);
     const [menuOpen, setMenuOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [toastMessage, setToastMessage] = useState("")

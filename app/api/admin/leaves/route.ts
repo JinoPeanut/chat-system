@@ -158,27 +158,14 @@ export async function GET(request: Request) {
         return sum + calculateAnnualLeave(user.createdAt.toISOString());
     }, 0)
 
-    const approvedLeaves = await prisma.leaveHistory.findMany({
-        where: {
-            status: "approved",
-            user: {
-                companyId: admin.companyId,
-            }
-        },
-        select: {
-            usedDays: true,
-            usedHours: true,
-        }
-    })
-
-    const allUserUseLeaveDays = approvedLeaves.reduce((sum, leave) => {
-        return sum + leave.usedDays
+    const allUserUseLeaveDays = users.reduce((sum, user) => {
+        return sum + user.leaveHistory.reduce((sum, leave) => sum + leave.usedDays, 0);
     }, 0);
 
     const remainLeaveDays = allUserHaveLeaveDays - allUserUseLeaveDays;
 
-    const allUserUseLeaveHours = approvedLeaves.reduce((sum, leave) => {
-        return sum + leave.usedHours
+    const allUserUseLeaveHours = users.reduce((sum, user) => {
+        return sum + user.leaveHistory.reduce((sum, leave) => sum + leave.usedHours, 0);
     }, 0);
 
     const useRate = allUserHaveLeaveDays === 0

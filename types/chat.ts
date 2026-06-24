@@ -16,6 +16,12 @@ export type User = {
     profile?: { tel: string, statusMsg: string, bestWorker: boolean } | null,
 }
 
+export type MessageSender = {
+    id: string,
+    name: string,
+    profilePic: string | null,
+}
+
 export type Message = {
     id: string, // 메세지 아이디
     senderId: string, // 보낸 사람
@@ -23,7 +29,7 @@ export type Message = {
     content: string, // 내용
     timeAt: string, // 시간
 
-    sender?: User,
+    sender: MessageSender,
 }
 
 export type RecentChat = {
@@ -40,25 +46,16 @@ export type RecentChat = {
     }[],
 }
 
+export type ChatMember = {
+    id: string,
+    name: string,
+    profilePic: string | null,
+    status: UserStatus,
+}
+
 export type Chat = {
     id: string, // 방 아이디
     room: RoomType, // 방 타입
-    members: {
-        id: string,
-        name: string,
-        profilePic: string,
-        status: UserStatus,
-    }[],
-    messages: {
-        id: string,
-        senderId: string,
-        chatRoomId: string,
-        content: string,
-        timeAt: string,
-        sender: {
-            id: string,
-            name: string,
-            profilePic: string | null,
-        }
-    }[],
+    members: ChatMember[],
+    messages: Message[],
 }

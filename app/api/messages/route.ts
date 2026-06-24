@@ -17,6 +17,13 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { chatRoomId, content } = body;
 
+    if (!chatRoomId || !content?.trim()) {
+        return NextResponse.json(
+            { message: "필수 값이 없습니다." },
+            { status: 400 }
+        );
+    }
+
     const existingchatRoom = await prisma.chatRoom.findFirst({
         where: {
             id: chatRoomId,
@@ -25,6 +32,9 @@ export async function POST(request: Request) {
                     id: userId,
                 }
             }
+        },
+        select: {
+            id: true,
         }
     })
 
@@ -32,13 +42,6 @@ export async function POST(request: Request) {
         return NextResponse.json(
             { message: "메세지를 보낼 수 없는 채팅방 입니다." },
             { status: 404 }
-        );
-    }
-
-    if (!chatRoomId || !content?.trim()) {
-        return NextResponse.json(
-            { message: "필수 값이 없습니다." },
-            { status: 400 }
         );
     }
 

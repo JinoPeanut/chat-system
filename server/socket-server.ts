@@ -42,6 +42,9 @@ io.on("connection", (socket) => {
                     },
                 },
             },
+            select: {
+                id: true,
+            }
         });
 
         if (!existingChatRoom) {
@@ -69,6 +72,9 @@ io.on("connection", (socket) => {
                         },
                     },
                 },
+                select: {
+                    id: true,
+                }
             });
 
             if (!existingChatRoom) {

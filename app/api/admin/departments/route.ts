@@ -195,24 +195,14 @@ export async function GET(request: Request) {
         },
     });
 
-    const organizationMemberCounts = await prisma.user.groupBy({
-        by: ["department"],
-        where: {
-            companyId: admin.companyId,
-        },
-        _count: {
-            id: true,
-        },
-    });
-
     const organizationData = orgDepartments.map((department) => {
-        const memberCount = organizationMemberCounts.find(
+        const count = memberCount.find(
             (item) => item.department === department.name
         )?._count.id ?? 0;
 
         return {
             ...department,
-            memberCount,
+            memberCount: count,
         };
     });
 
@@ -292,6 +282,9 @@ export async function POST(request: Request) {
         where: {
             companyId: admin.companyId,
             name: name.trim(),
+        },
+        select: {
+            id: true,
         }
     });
 
