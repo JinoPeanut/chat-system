@@ -64,7 +64,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ de
             id: {
                 not: departmentId,
             }
-        }
+        },
+        select: {
+            id: true,
+        },
     });
 
     if (existingDepartment) {
@@ -78,7 +81,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ de
         where: {
             id: departmentId,
             companyId: admin.companyId,
-        }
+        },
+        select: {
+            id: true,
+            name: true,
+        },
     })
 
     if (!targetDepartment) {
@@ -169,13 +176,17 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
         where: {
             id: departmentId,
             companyId: admin.companyId,
+        },
+        select: {
+            id: true,
+            name: true,
         }
     })
 
     if (!targetDepartment) {
         return NextResponse.json(
-            { message: "해당 부서는 삭제할 수 없습니다." },
-            { status: 403 }
+            { message: "해당 부서를 찾을 수 없습니다." },
+            { status: 404 }
         );
     }
 

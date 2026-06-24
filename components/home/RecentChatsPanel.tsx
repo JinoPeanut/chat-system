@@ -1,11 +1,11 @@
 "use client"
 
 import { useAuthStore } from "@/stores/useAuthStore";
-import { Chat } from "@/types/chat"
+import { RecentChat } from "@/types/chat"
 import Link from "next/link";
 
 type RecentChatsPanelProps = {
-    recentChat: Chat[],
+    recentChat: RecentChat[],
 }
 
 export default function RecentChatsPanel({ recentChat }: RecentChatsPanelProps) {

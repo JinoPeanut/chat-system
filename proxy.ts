@@ -6,7 +6,10 @@ export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     const isProtectedRoute =
-        pathname.startsWith("/home") || pathname.startsWith("/chat");
+        pathname.startsWith("/home") ||
+        pathname.startsWith("/chat") ||
+        pathname.startsWith("/notice") ||
+        pathname.startsWith("/admin")
 
     if (isProtectedRoute && !userId) {
         return NextResponse.redirect(new URL("/", request.url));
@@ -16,5 +19,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ["/home/:path*", "/chat/:path*"],
+    matcher: ["/home/:path*", "/chat/:path*", "/notice/:path*", "/admin/:path*"],
 };

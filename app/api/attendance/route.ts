@@ -2,7 +2,29 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-export async function POST(request: Request) {
+// 서버 시간 계산용 
+const getKoreanDateTime = (now: Date) => {
+    const parts = new Intl.DateTimeFormat("ko-KR", {
+        timeZone: "Asia/Seoul",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+    }).formatToParts(now);
+
+    const values = Object.fromEntries(
+        parts.map((part) => [part.type, part.value])
+    );
+
+    return {
+        date: `${values.year}-${values.month}-${values.day}`,
+        minutes: Number(values.hour) * 60 + Number(values.minute),
+    };
+};
+
+export async function POST() {
     const cookieStore = await cookies();
     const userId = cookieStore.get("auth_user_id")?.value;
 
@@ -13,9 +35,7 @@ export async function POST(request: Request) {
         );
     }
 
-    const body = await request.json();
-
-    const { date, checkInAt, checkOutAt, workMinutes } = body;
+    const { date, minutes: checkInAt } = getKoreanDateTime(new Date());
 
     if (!date) {
         return NextResponse.json(
@@ -28,6 +48,9 @@ export async function POST(request: Request) {
         where: {
             userId,
             date
+        },
+        select: {
+            id: true,
         }
     })
 
@@ -44,15 +67,18 @@ export async function POST(request: Request) {
             userId,
             date,
             checkInAt,
-            checkOutAt,
-            workMinutes,
+            checkOutAt: null,
+            workMinutes: null,
         },
+        select: {
+            id: true,
+        }
     });
 
     return NextResponse.json(attendance, { status: 201 });
 }
 
-export async function PATCH(request: Request) {
+export async function PATCH() {
     const cookieStore = await cookies();
     const userId = cookieStore.get("auth_user_id")?.value;
 
@@ -63,8 +89,7 @@ export async function PATCH(request: Request) {
         );
     }
 
-    const body = await request.json();
-    const { date, checkOutAt, workMinutes } = body;
+    const { date, minutes: checkOutAt } = getKoreanDateTime(new Date());
 
     if (!date) {
         return NextResponse.json(
@@ -78,14 +103,28 @@ export async function PATCH(request: Request) {
             userId,
             date,
         },
+        select: {
+            id: true,
+            checkInAt: true,
+            checkOutAt: true,
+        }
     });
 
-    if (!existingAttendance) {
+    if (!existingAttendance || existingAttendance.checkInAt === null) {
         return NextResponse.json(
-            { message: "수정할 출석 기록이 없습니다." },
+            { message: "출근 기록을 찾을 수 없습니다." },
             { status: 404 }
         );
     }
+
+    if (existingAttendance.checkOutAt !== null) {
+        return NextResponse.json(
+            { message: "이미 퇴근 처리되었습니다." },
+            { status: 409 }
+        )
+    }
+
+    const workMinutes = checkOutAt - existingAttendance.checkInAt;
 
     const updatedAttendance = await prisma.attendance.update({
         where: {

@@ -4,9 +4,9 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
     const cookieStore = await cookies();
-    const currentUserId = cookieStore.get("auth_user_id")?.value;
+    const userId = cookieStore.get("auth_user_id")?.value;
 
-    if (!currentUserId) {
+    if (!userId) {
         return NextResponse.json(
             { message: "로그인이 필요합니다" },
             { status: 401 }
@@ -23,43 +23,53 @@ export async function POST(request: Request) {
         );
     }
 
-    if (currentUserId === targetUserId) {
+    if (userId === targetUserId) {
         return NextResponse.json(
             { message: "자기 자신과 채팅방을 만들 수 없습니다" },
             { status: 400 }
         );
     }
 
-    const targetUser = await prisma.user.findUnique({
-        where: { id: targetUserId }
+    const currentUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+            companyId: true,
+        }
     })
 
-    if (!targetUser) {
+    const targetUser = await prisma.user.findUnique({
+        where: { id: targetUserId },
+        select: {
+            id: true,
+            companyId: true,
+        }
+    })
+
+    if (!currentUser || !targetUser) {
         return NextResponse.json(
             { message: "존재하지 않는 유저입니다" },
             { status: 404 }
         );
     }
 
+    if (currentUser.companyId !== targetUser.companyId) {
+        return NextResponse.json(
+            { message: "다른 회사 사용자와는 채팅할 수 없습니다." },
+            { status: 403 }
+        )
+    }
+
     const existingRoom = await prisma.chatRoom.findFirst({
         where: {
             room: "personal",
             AND: [
-                { members: { some: { id: currentUserId } } },
+                { members: { some: { id: userId } } },
                 { members: { some: { id: targetUserId } } },
             ]
         },
-        include: {
-            members: true,
-            messages: {
-                include: {
-                    sender: true,
-                },
-                orderBy: {
-                    timeAt: "asc",
-                },
-            },
-        },
+        select: {
+            id: true,
+        }
     });
 
     if (existingRoom) {
@@ -75,15 +85,14 @@ export async function POST(request: Request) {
             room: "personal",
             members: {
                 connect: [
-                    { id: currentUserId },
+                    { id: userId },
                     { id: targetUserId },
                 ],
             },
         },
-        include: {
-            members: true,
-            messages: true,
-        },
+        select: {
+            id: true,
+        }
     });
 
     return NextResponse.json(

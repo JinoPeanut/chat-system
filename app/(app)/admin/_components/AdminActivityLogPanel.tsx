@@ -1,35 +1,30 @@
 "use client"
 
-import { CalendarCheck, ChevronRight, ClipboardCheck, Megaphone } from "lucide-react";
+import { AdminActivityLog } from "@/types/logs";
+import { getActivityIcon } from "@/utils/logUtils";
+import { ChevronRight } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
-
-type ActivityLogType = "notice" | "leave" | "default";
-
-
-type AdminActivityLog = {
-    id: number;
-    type: ActivityLogType;
-    message: string;
-    createdAt: string;
-};
-
-const getActivityIcon = (type: ActivityLogType) => {
-    if (type === "notice") return Megaphone
-    if (type === "leave") return CalendarCheck
-    return ClipboardCheck
-}
 
 export default function AdminActivityLogPanel() {
     const [logs, setLogs] = useState<AdminActivityLog[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState("");
 
+    const LIMIT = 5;
+
     const fetchActivityLogs = async () => {
+
+        setErrorMessage("");
+
+        const params = new URLSearchParams({
+            limit: String(LIMIT),
+        });
+
         try {
             setIsLoading(true);
-            setErrorMessage("");
 
-            const res = await fetch("/api/admin/activity-logs?limit=5");
+            const res = await fetch(`/api/admin/activity-logs?${params.toString()}`);
             const data = await res.json();
 
             if (!res.ok) {
@@ -54,13 +49,13 @@ export default function AdminActivityLogPanel() {
             <div className="flex justify-between items-center">
                 <p className="text-base tracking-tight font-semibold">최근 활동 로그</p>
 
-                <div
-                    //onClick={}
+                <Link
+                    href={`/admin/activity-logs`}
                     className="flex gap-3 items-center justify-between border border-gray-300 text-gray-500 rounded-lg px-4 py-2 cursor-pointer"
                 >
                     <p className="text-sm">전체 보기</p>
                     <ChevronRight size={18} />
-                </div>
+                </Link>
             </div>
 
 

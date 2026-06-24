@@ -1,7 +1,7 @@
 "use client"
 
 import { usePagination } from "@/hooks/notice/usePagination";
-import { AdminLeave, LeaveStatus } from "@/types/leave";
+import { AdminLeave, DepartmentLeaveStat, LeaveStatus } from "@/types/leave";
 import { formatCreatedAt } from "@/utils/dateUtils";
 import { getLeaveStatus, getLeaveStatusCard, getLeaveTypeText } from "@/utils/statusUtils";
 import { Calendar1, CalendarCheck, CalendarDaysIcon, ChevronDown, ChevronRight, Clock, RefreshCcw, User2 } from "lucide-react";
@@ -20,16 +20,6 @@ type LeaveSummary = {
     usedHours: number,
     useRate: number,
     remainRate: number,
-}
-
-type DepartmentLeaveStat = {
-    departmentId: string,
-    department: string,
-    totalDays: number,
-    usedDays: number,
-    remainDays: number,
-    useRate: number,
-    averageUsedDays: number,
 }
 
 type AdminLeaveResponse = {
@@ -64,6 +54,7 @@ export default function AdminLeavePage() {
     const { page, setPage, nextPage, prevPage } = usePagination({ totalPages });
 
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isInitialized, setIsInitialized] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
 
     const [selectStatus, setSelectStatus] = useState<LeaveStatus | "">("");
@@ -88,6 +79,7 @@ export default function AdminLeavePage() {
     ]
 
     const [departmentOptions, setDepartmentOptions] = useState<DepartmentOption[]>([]);
+    const [selectDepartmentStat, setSelectDepartmentStat] = useState<DepartmentLeaveStat | null>(null);
     const [leaveDetailModalOpen, setLeaveDetailModalOpen] = useState(false);
 
     const startDateRef = useRef<HTMLInputElement>(null);
@@ -100,9 +92,16 @@ export default function AdminLeavePage() {
         deptPage * DEPT_LIMIT,
     )
 
+    const showErrorMessage = (message: string) => {
+        setErrorMessage(message);
+
+        setTimeout(() => {
+            setErrorMessage("");
+        }, 1500);
+    }
+
     const fetchLeaveData = async () => {
         if (isProcessing) return;
-        setErrorMessage("");
 
         const params = new URLSearchParams({
             page: String(page),
@@ -132,7 +131,7 @@ export default function AdminLeavePage() {
             const data: AdminLeaveResponse = await res.json();
 
             if (!res.ok) {
-                setErrorMessage(data.message ?? "연차 정보를 불러오지 못했습니다.");
+                showErrorMessage(data.message ?? "연차 정보를 불러오지 못했습니다.");
                 return;
             }
 
@@ -143,7 +142,7 @@ export default function AdminLeavePage() {
             setDepartmentStats(data.departmentStats);
 
         } catch (error) {
-            setErrorMessage("서버와 연결할 수 없습니다.");
+            showErrorMessage("서버와 연결할 수 없습니다.");
         } finally {
             setIsProcessing(false);
         }
@@ -151,7 +150,6 @@ export default function AdminLeavePage() {
 
     const handleSubmitLeave = async (leaveId: string, status: "approved" | "rejected") => {
         if (isProcessing) return;
-        setErrorMessage("");
 
         try {
             setIsProcessing(true);
@@ -165,26 +163,62 @@ export default function AdminLeavePage() {
             const data = await res.json();
 
             if (!res.ok) {
-                setErrorMessage(data.message ?? "연차 변경에 실패했습니다.");
+                showErrorMessage(data.message ?? "연차 변경에 실패했습니다.");
                 return;
             }
 
             await fetchLeaveData();
         } catch (error) {
-            setErrorMessage("서버 연결에 실패했습니다.");
+            showErrorMessage("서버 연결에 실패했습니다.");
         } finally {
             setIsProcessing(false);
         }
     }
 
+    const initializeLeaveData = async () => {
+        try {
+            const res = await fetch("/api/admin/leaves/expire", {
+                method: "POST",
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                showErrorMessage(data.message ?? "만료 연차 처리에 실패했습니다");
+                return;
+            }
+
+        } catch (error) {
+            showErrorMessage("서버에 연결할 수 없습니다.");
+        } finally {
+            setIsInitialized(true);
+        }
+    }
+
     useEffect(() => {
+        initializeLeaveData();
+    }, [])
+
+    useEffect(() => {
+        if (!isInitialized) return;
+
         fetchLeaveData();
-    }, [page, selectStatus, selectDepartment, periodStart, periodEnd])
+    }, [isInitialized, page, selectStatus, selectDepartment, periodStart, periodEnd])
 
     return (
-        <div className="h-[100dvh] w-full flex flex-col gap-2 px-8 py-6">
+        <div className="relative h-[100dvh] w-full flex flex-col gap-2 px-8 py-6">
             <h2 className="font-bold text-lg">연차 관리</h2>
             <p className="font-semibold text-sm text-gray-500">연차 신청 및 사용 현황을 관리하고 승인할 수 있습니다.</p>
+
+            {errorMessage && (
+                <div className="absolute right-5 top-15 animate-slide-toast bg-red-100 rounded-md px-4 py-2">
+                    <p className="text-sm text-red-500">{errorMessage}</p>
+
+                    <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-red-100">
+                        <div className="h-full bg-red-500 animate-toast-timer" />
+                    </div>
+                </div>
+            )}
 
             <div className="flex justify-between items-center mt-5">
                 <div className="flex items-center gap-2">
@@ -315,7 +349,7 @@ export default function AdminLeavePage() {
                                         const nextStart = e.target.value;
 
                                         if (periodEnd && nextStart > periodEnd) {
-                                            setErrorMessage("시작일은 종료일보다 늦을 수 없습니다");
+                                            showErrorMessage("시작일은 종료일보다 늦을 수 없습니다");
                                             return;
                                         }
 
@@ -333,7 +367,7 @@ export default function AdminLeavePage() {
                                         const nextEnd = e.target.value;
 
                                         if (periodStart && nextEnd < periodStart) {
-                                            setErrorMessage("종료일은 시작일보다 빠를 수 없습니다");
+                                            showErrorMessage("종료일은 시작일보다 빠를 수 없습니다");
                                             return;
                                         }
                                         setPeriodEnd(nextEnd);
@@ -560,7 +594,10 @@ export default function AdminLeavePage() {
                                                     </div>
                                                     <p className="text-center text-sm">{dept.averageUsedDays.toFixed(1)}일</p>
                                                     <div className="flex justify-center text-sm">
-                                                        <button onClick={() => setLeaveDetailModalOpen(true)}
+                                                        <button onClick={() => {
+                                                            setLeaveDetailModalOpen(true)
+                                                            setSelectDepartmentStat(dept)
+                                                        }}
                                                             className="border border-gray-200 px-4 py-2 rounded-lg cursor-pointer
                                                                 hover:bg-gray-200"
                                                         >
@@ -596,7 +633,15 @@ export default function AdminLeavePage() {
                             </button>
                         </div>
 
-                        {leaveDetailModalOpen && (<LeaveDetailModal />)}
+                        {leaveDetailModalOpen && selectDepartmentStat &&
+                            (<LeaveDetailModal
+                                onClose={() => {
+                                    setLeaveDetailModalOpen(false)
+                                    setSelectDepartmentStat(null);
+                                }}
+                                department={selectDepartmentStat}
+                            />)
+                        }
                     </div>
                 )
             }
