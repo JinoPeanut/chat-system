@@ -1,5 +1,3 @@
-import { User } from "./chat";
-
 export type NoticeCategory = "notice" | "event" | "update" | "etc";
 export type NoticeScope = "all" | "notice" | "event" | "update" | "etc";
 
@@ -12,26 +10,48 @@ export const NOTICE_TABS: { key: NoticeScope; label: string }[] = [
 ];
 
 export type NoticeAttachment = {
-    id: string;
-    fileName: string;
-    fileUrl: string;
-    fileSize?: number | null;
-    fileType?: string | null;
+    id: string,
+    fileName: string,
+    fileUrl: string,
+    fileSize?: number | null,
+    fileType?: string | null,
 };
 
+// 게시글 목록 GET 전용 타입
 export type Notice = {
-    id: string;
-    category: NoticeCategory;   // 제목 앞 [태그] 용
-    title: string;
-    content?: string;           // 목록만 우선이면 optional
-    authorId: string;           // USERS와 연결
-    createdAt: string;          // 만든 시간
-    isPinned?: boolean;         // 상단 고정 필요하면
-    author?: User;
-    attachments?: NoticeAttachment[];
-    viewCount: number;
+    id: string,
+    title: string,
+    category: NoticeCategory,   // 제목 앞 [태그] 용
+    isPinned: boolean,         // 상단 고정 필요하면
+    createdAt: string,          // 만든 시간
+
+    author: {
+        name: string,
+        profilePic: string | null,
+        position: string,
+    }
 };
 
+// 게시글 상세 GET 타입
+export type NoticeDetailType = {
+    id: string;
+    authorId: string,
+    title: string,
+    category: NoticeCategory,
+    createdAt: string,
+    isPinned: boolean,
+    content: string | null,
+    viewCount: number,
+
+    author: {
+        name: string,
+        profilePic: string | null,
+    },
+
+    attachments: NoticeAttachment[],
+}
+
+// 관리자 게시글관리 목록 GET 전용 타입
 export type AdminNotice = {
     id: string,
     title: string,

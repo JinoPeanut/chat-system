@@ -47,10 +47,15 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ le
                 companyId: admin.companyId,
             }
         },
-        include: {
+        select: {
+            id: true,
+            userId: true,
+            leaveDate: true,
+            status: true,
+            usedDays: true,
+            usedHours: true,
             user: {
                 select: {
-                    id: true,
                     name: true,
                     // 유저의 입사일을 기준으로 연차를 계산하기 때문에
                     // createdAt 을 허용

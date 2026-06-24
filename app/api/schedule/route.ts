@@ -15,14 +15,61 @@ export async function POST(request: Request) {
 
     const body = await request.json();
 
+    const { title, startAt, endAt, titleMemo, content } = body;
+
+    if (typeof title !== "string" || !title.trim() || typeof startAt !== "string") {
+        return NextResponse.json(
+            { message: "필수 값이 없습니다." },
+            { status: 400 }
+        );
+    }
+
+    if (endAt !== undefined && typeof endAt !== "string") {
+        return NextResponse.json(
+            { message: "종료일 형식이 올바르지 않습니다." },
+            { status: 400 }
+        )
+    }
+
+    if (titleMemo !== undefined && typeof titleMemo !== "string") {
+        return NextResponse.json(
+            { message: "메모 형식이 올바르지 않습니다." },
+            { status: 400 }
+        );
+    }
+
+    if (content !== undefined && typeof content !== "string") {
+        return NextResponse.json(
+            { message: "내용 형식이 올바르지 않습니다." },
+            { status: 400 }
+        )
+    }
+
+    const startDate = new Date(startAt);
+    const endDate = endAt ? new Date(endAt) : null;
+
+    if (Number.isNaN(startDate.getTime()) || (endDate && Number.isNaN(endDate.getTime()))) {
+        return NextResponse.json(
+            { message: "올바른 날짜 형식이 아닙니다." },
+            { status: 400 }
+        )
+    }
+
+    if (endDate && endDate.getTime() < startDate.getTime()) {
+        return NextResponse.json(
+            { message: "종료일은 시작일보다 빠를 수 없습니다." },
+            { status: 400 }
+        );
+    }
+
     const schedule = await prisma.schedule.create({
         data: {
             userId,
-            title: body.title,
-            titleMemo: body.titleMemo ? body.titleMemo : null,
-            content: body.content ? body.content : null,
-            startAt: new Date(body.startAt),
-            endAt: body.endAt ? new Date(body.endAt) : null,
+            title: title.trim(),
+            titleMemo: titleMemo ? titleMemo : null,
+            content: content ? content : null,
+            startAt: startDate,
+            endAt: endDate,
         }
     });
 
@@ -42,10 +89,67 @@ export async function PATCH(request: Request) {
 
     const body = await request.json();
 
+    const { id, title, startAt, endAt, titleMemo, content } = body;
+
+    if (typeof id !== "string" || !id.trim()) {
+        return NextResponse.json(
+            { message: "일정 id가 필요합니다." },
+            { status: 400 }
+        );
+    }
+
+    if (typeof title !== "string" || !title.trim() || typeof startAt !== "string") {
+        return NextResponse.json(
+            { message: "필수 값이 없습니다." },
+            { status: 400 }
+        );
+    }
+
+    if (endAt !== undefined && typeof endAt !== "string") {
+        return NextResponse.json(
+            { message: "종료일 형식이 올바르지 않습니다." },
+            { status: 400 }
+        )
+    }
+
+    if (titleMemo !== undefined && typeof titleMemo !== "string") {
+        return NextResponse.json(
+            { message: "메모 형식이 올바르지 않습니다." },
+            { status: 400 }
+        );
+    }
+
+    if (content !== undefined && typeof content !== "string") {
+        return NextResponse.json(
+            { message: "내용 형식이 올바르지 않습니다." },
+            { status: 400 }
+        )
+    }
+
+    const startDate = new Date(startAt);
+    const endDate = endAt ? new Date(endAt) : null;
+
+    if (Number.isNaN(startDate.getTime()) || (endDate && Number.isNaN(endDate.getTime()))) {
+        return NextResponse.json(
+            { message: "올바른 날짜 형식이 아닙니다." },
+            { status: 400 }
+        )
+    }
+
+    if (endDate && endDate.getTime() < startDate.getTime()) {
+        return NextResponse.json(
+            { message: "종료일은 시작일보다 빠를 수 없습니다." },
+            { status: 400 }
+        );
+    }
+
     const existingSchedule = await prisma.schedule.findFirst({
         where: {
-            id: body.id,
+            id: id,
             userId,
+        },
+        select: {
+            id: true,
         }
     })
 
@@ -58,15 +162,15 @@ export async function PATCH(request: Request) {
 
     const schedule = await prisma.schedule.update({
         where: {
-            id: body.id
+            id: id,
         },
         data: {
-            title: body.title,
-            titleMemo: body.titleMemo ? body.titleMemo : null,
-            content: body.content ? body.content : null,
-            startAt: new Date(body.startAt),
-            endAt: body.endAt ? new Date(body.endAt) : null,
-        }
+            title: title.trim(),
+            titleMemo: titleMemo ? titleMemo : null,
+            content: content ? content : null,
+            startAt: startDate,
+            endAt: endDate,
+        },
     })
 
     return NextResponse.json(schedule);
@@ -85,10 +189,22 @@ export async function DELETE(request: Request) {
 
     const body = await request.json();
 
+    const { id } = body;
+
+    if (typeof id !== "string" || !id.trim()) {
+        return NextResponse.json(
+            { message: "일정 id가 필요합니다." },
+            { status: 400 }
+        );
+    }
+
     const existingSchedule = await prisma.schedule.findFirst({
         where: {
-            id: body.id,
+            id: id,
             userId,
+        },
+        select: {
+            id: true,
         }
     })
 
@@ -101,7 +217,7 @@ export async function DELETE(request: Request) {
 
     const schedule = await prisma.schedule.delete({
         where: {
-            id: body.id,
+            id: id,
         }
     });
 

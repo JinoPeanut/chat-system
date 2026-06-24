@@ -98,7 +98,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ no
                 companyId: admin.companyId,
             }
         },
-
+        select: {
+            id: true,
+        },
     })
 
     if (!notice) {

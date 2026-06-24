@@ -48,7 +48,13 @@ export async function POST(request: Request) {
             profilePic: null,
             companyId: company.id,
         },
+        select: {
+            id: true,
+        }
     });
 
-    return NextResponse.json(user, { status: 201 });
+    return NextResponse.json(
+        { message: "회원가입이 완료 되었습니다.", },
+        { status: 201 }
+    );
 }

@@ -1,4 +1,4 @@
-import { Chat, Message, User } from "@/types/chat";
+import { Chat, Message } from "@/types/chat";
 import MessageItem from "./MessageItem";
 
 type MessageListProps = {

@@ -64,7 +64,20 @@ export async function GET(request: Request) {
 
     const notice = await prisma.notice.findMany({
         where,
-        include: { author: true, attachments: true },
+        select: {
+            id: true,
+            title: true,
+            category: true,
+            isPinned: true,
+            createdAt: true,
+            author: {
+                select: {
+                    name: true,
+                    profilePic: true,
+                    position: true,
+                }
+            }
+        },
         orderBy: [
             { isPinned: "desc" },
             { createdAt: "desc" },
@@ -126,6 +139,9 @@ export async function POST(request: Request) {
 
     const existingUser = await prisma.user.findUnique({
         where: { id: userId },
+        select: {
+            id: true,
+        }
     })
 
     if (!existingUser) {
@@ -144,8 +160,8 @@ export async function POST(request: Request) {
             isPinned: isPinnedValue,
             authorId: userId,
         },
-        include: {
-            author: true,
+        select: {
+            id: true,
         }
     })
 
@@ -266,7 +282,10 @@ export async function PATCH(request: Request) {
     }
 
     const existingNotice = await prisma.notice.findFirst({
-        where: { id: id, authorId: userId }
+        where: { id: id, authorId: userId },
+        select: {
+            id: true,
+        }
     })
 
     if (!existingNotice) {
@@ -347,7 +366,9 @@ export async function PATCH(request: Request) {
 
     const updateNotice = await prisma.notice.findUnique({
         where: { id },
-        include: { author: true, attachments: true },
+        select: {
+            id: true,
+        }
     });
 
     return NextResponse.json(updateNotice);
@@ -376,6 +397,9 @@ export async function DELETE(request: Request) {
 
     const existingNotice = await prisma.notice.findFirst({
         where: { id: body.id, authorId: userId },
+        select: {
+            id: true,
+        }
     });
 
     if (!existingNotice) {

@@ -105,27 +105,12 @@ export default function useLeavePanel({ leave, onRefresh }: useLeavePanelProps) 
             });
 
             closeApplyModal();
-        } catch (error) {
+        } catch {
             setErrorMessage("서버에 연결할 수 없습니다");
         } finally {
             setIsProcessing(false);
         }
     }
-
-    // Leave 데이터 수정
-    const handleApproveLeave = async (leaveId: string) => {
-        const res = await fetch("/api/leave/approve", {
-            method: "PATCH",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ leaveId }),
-        });
-
-        if (!res.ok) return;
-
-        await onRefresh({ silent: true });
-    };
 
     return {
         myUserName,
@@ -148,7 +133,6 @@ export default function useLeavePanel({ leave, onRefresh }: useLeavePanelProps) 
         handleChangeLeaveType,
         handleChangeReason,
         handleSubmitApply,
-        handleApproveLeave,
         errorMessage,
         isProcessing,
     }
