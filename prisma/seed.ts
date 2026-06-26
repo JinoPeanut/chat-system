@@ -402,21 +402,43 @@ async function main() {
         }
     })
 
-    await prisma.schedule.deleteMany();
-
-    await prisma.schedule.create({
-        data: {
+    await prisma.schedule.upsert({
+        where: {
+            id: "seed-schedule-1",
+        },
+        update: {
             userId: "user-1",
             title: "팀 회의",
             titleMemo: "노트북 꼭 챙겨가기!",
             content: "이번 주 스프린트 계획 논의",
             startAt: new Date("2026-04-23T11:00:00"),
             endAt: new Date("2026-04-23T12:00:00"),
+        },
+        create: {
+            id: "seed-schedule-1",
+            userId: "user-1",
+            title: "팀 회의",
+            titleMemo: "노트북 챙기기",
+            content: "이번 주 스프린트 계획 회의",
+            startAt: new Date("2026-04-23T11:00:00"),
+            endAt: new Date("2026-04-23T12:00:00"),
         }
     })
 
-    await prisma.schedule.create({
-        data: {
+    await prisma.schedule.upsert({
+        where: {
+            id: "seed-schedule-2",
+        },
+        update: {
+            userId: "user-1",
+            title: "컴포넌트 리팩토링",
+            titleMemo: "SideBar 먼저",
+            content: "기술 부채 정리",
+            startAt: new Date("2026-04-23T14:00:00"),
+            endAt: new Date("2026-04-23T16:00:00"),
+        },
+        create: {
+            id: "seed-schedule-2",
             userId: "user-1",
             title: "컴포넌트 리팩토링",
             titleMemo: "SideBar 먼저",
@@ -426,8 +448,20 @@ async function main() {
         }
     })
 
-    await prisma.schedule.create({
-        data: {
+    await prisma.schedule.upsert({
+        where: {
+            id: "seed-schedule-3",
+        },
+        update: {
+            userId: "user-1",
+            title: "코드 리뷰",
+            titleMemo: undefined,
+            content: "PR #12 리뷰",
+            startAt: new Date("2026-04-23T16:30:00"),
+            endAt: new Date("2026-04-23T17:30:00"),
+        },
+        create: {
+            id: "seed-schedule-3",
             userId: "user-1",
             title: "코드 리뷰",
             titleMemo: undefined,
@@ -437,8 +471,20 @@ async function main() {
         }
     })
 
-    await prisma.schedule.create({
-        data: {
+    await prisma.schedule.upsert({
+        where: {
+            id: "seed-schedule-4",
+        },
+        update: {
+            userId: "user-1",
+            title: "디자인 회의",
+            titleMemo: "피그마 링크 준비",
+            content: "UI 개선 논의",
+            startAt: new Date("2026-04-23T10:00:00"),
+            endAt: new Date("2026-04-23T11:00:00"),
+        },
+        create: {
+            id: "seed-schedule-4",
             userId: "user-1",
             title: "디자인 회의",
             titleMemo: "피그마 링크 준비",
@@ -448,8 +494,20 @@ async function main() {
         }
     })
 
-    await prisma.schedule.create({
-        data: {
+    await prisma.schedule.upsert({
+        where: {
+            id: "seed-schedule-5",
+        },
+        update: {
+            userId: "user-1",
+            title: "마무리 잔업",
+            titleMemo: "UI 남았다!",
+            content: null,
+            startAt: new Date("2026-04-23T19:00:00"),
+            endAt: new Date("2026-04-23T20:00:00"),
+        },
+        create: {
+            id: "seed-schedule-5",
             userId: "user-1",
             title: "마무리 잔업",
             titleMemo: "UI 남았다!",
@@ -459,8 +517,20 @@ async function main() {
         }
     })
 
-    await prisma.schedule.create({
-        data: {
+    await prisma.schedule.upsert({
+        where: {
+            id: "seed-schedule-6",
+        },
+        update: {
+            userId: "user-1",
+            title: "일정 패널 완성",
+            titleMemo: "데이터 연결 확인",
+            content: null,
+            startAt: new Date("2026-04-26T19:00:00"),
+            endAt: new Date("2026-04-26T20:00:00"),
+        },
+        create: {
+            id: "seed-schedule-6",
             userId: "user-1",
             title: "일정 패널 완성",
             titleMemo: "데이터 연결 확인",

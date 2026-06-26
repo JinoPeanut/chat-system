@@ -12,7 +12,6 @@ export default function ChatPanel() {
     const router = useRouter();
 
     const authUser = useAuthStore((state) => state.user);
-    const clearUser = useAuthStore((state) => state.clearUser);
     const myDepartment = authUser?.department;
     const myUserId = authUser?.id ?? null;
 
@@ -21,14 +20,6 @@ export default function ChatPanel() {
     const [keyword, setKeyword] = useState("");
 
     const isSearching = keyword.trim().length > 0;
-
-    const logout = async () => {
-        await fetch("/api/auth/logout", {
-            method: "POST"
-        });
-        clearUser();
-        router.push("/");
-    };
 
     // 채팅방 이동
     const handleOpenChat = async (targetUserId: string) => {
@@ -166,15 +157,6 @@ export default function ChatPanel() {
                             </div>
                         )
                     })}
-                </div>
-
-                <div className="mt-auto p-4 mx-auto">
-                    <button
-                        onClick={logout}
-                        className="bg-gray-200 px-4 py-2 rounded-md hover:bg-red-500 cursor-pointer"
-                    >
-                        로그아웃
-                    </button>
                 </div>
             </div>
         </>

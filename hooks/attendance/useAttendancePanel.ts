@@ -1,4 +1,3 @@
-import { useAuthStore } from "@/stores/useAuthStore";
 import { HomeAttendance } from "@/types/attendance";
 import { RefreshOptions } from "@/types/home";
 import { useState } from "react";
@@ -9,7 +8,6 @@ type useAttendancePanelProps = {
 }
 
 export default function useAttendancePanel({ attendance, onRefresh }: useAttendancePanelProps) {
-    const authUser = useAuthStore((state) => state.user);
 
     // 현재 시간 표시용
     function formatKoreanTime(now: Date) {
@@ -45,9 +43,6 @@ export default function useAttendancePanel({ attendance, onRefresh }: useAttenda
 
     const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
-    const todayKey = new Date().toISOString().slice(0, 10);
-    const myUserId = authUser?.id;
-
     const todayAttendance = attendance?.today;
     const workMinutes = attendance.workMinutes
     const leftMinutes = attendance.leftMinutes
@@ -57,7 +52,7 @@ export default function useAttendancePanel({ attendance, onRefresh }: useAttenda
     const checkOutText = formatTimeFromMinutes(todayAttendance?.checkOutAt ?? null);
 
     const handleCheckIn = async () => {
-        if (todayAttendance?.checkInAt || !myUserId) return;
+        if (todayAttendance?.checkInAt) return;
 
         const res = await fetch("/api/attendance", {
             method: "POST",
@@ -69,7 +64,7 @@ export default function useAttendancePanel({ attendance, onRefresh }: useAttenda
     }
 
     const handleCheckOut = async () => {
-        if (!todayAttendance?.checkInAt || !myUserId) return;
+        if (!todayAttendance?.checkInAt) return;
 
         const res = await fetch("/api/attendance", {
             method: "PATCH",
