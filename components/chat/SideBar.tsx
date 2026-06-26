@@ -1,17 +1,26 @@
 "use client"
 
-import { Home, MessageCircleMore, Newspaper, Shield } from "lucide-react"
+import { DoorOpenIcon, Home, MessageCircleMore, Newspaper, Shield } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useAuthStore } from "@/stores/useAuthStore";
 
 export default function SideBar() {
-    const authUser = useAuthStore((state) => state.user);
     const router = useRouter();
+    const authUser = useAuthStore((state) => state.user);
+    const clearUser = useAuthStore((state) => state.clearUser);
+
+    const logout = async () => {
+        await fetch("/api/auth/logout", {
+            method: "POST"
+        });
+        clearUser();
+        router.push("/");
+    };
 
     return (
         <div className="flex min-h-screen">
             {/* 사이드바 왼쪽 - 아이콘 버튼 */}
-            <div className="flex flex-col bg-[#D9B8F3] rounded-lg">
+            <div className="flex flex-col min-h-screen bg-[#D9B8F3] rounded-lg">
                 {/* 왼쪽 프로필칸 */}
                 <div className="p-4 flex flex-col gap-5">
                     {/* 메인홈 버튼 */}
@@ -19,7 +28,7 @@ export default function SideBar() {
                         onClick={() => router.push("/home")}
                         className="
                         rounded-lg border-gray-300 w-[50px] h-[50px] cursor-pointer
-                        inline-flex justify-center items-center hover:bg-gray-400 mr-2 mb-10
+                        inline-flex justify-center items-center hover:bg-gray-400 mr-2
                     ">
                         <Home />
                     </button>
@@ -54,6 +63,17 @@ export default function SideBar() {
                             <Shield />
                         </button>
                     )}
+                </div>
+
+                {/* 로그아웃 버튼 */}
+                <div className="mt-auto p-4">
+                    <button
+                        onClick={logout}
+                        className="rounded-lg border-gray-300 w-[50px] h-[50px] cursor-pointer
+                            inline-flex justify-center items-center hover:bg-red-100 hover:text-red-500 mr-2"
+                    >
+                        <DoorOpenIcon />
+                    </button>
                 </div>
             </div>
         </div>

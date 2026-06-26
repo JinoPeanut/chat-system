@@ -51,7 +51,8 @@ export default function AdminActivityLogPanel() {
 
                 <Link
                     href={`/admin/activity-logs`}
-                    className="flex gap-3 items-center justify-between border border-gray-300 text-gray-500 rounded-lg px-4 py-2 cursor-pointer"
+                    className="flex gap-3 items-center justify-between border border-gray-300 text-gray-500 rounded-lg px-4 py-2 cursor-pointer
+                        hover:bg-gray-100"
                 >
                     <p className="text-sm">전체 보기</p>
                     <ChevronRight size={18} />
